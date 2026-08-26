@@ -1,0 +1,624 @@
+/* ============================================================
+   anims.css · 概念动画场景
+   约定：所有子动画时长统一为 var(--T)，通过 animation-delay 错相，
+        形成"循环播放的完整故事"。暂停由 .paused 统一控制。
+   ============================================================ */
+
+.anim-stage {
+  --ink: var(--text);
+  position: relative;
+  height: 300px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  background:
+    linear-gradient(color-mix(in srgb, var(--line) 35%, transparent) 1px, transparent 1px),
+    linear-gradient(90deg, color-mix(in srgb, var(--line) 35%, transparent) 1px, transparent 1px),
+    var(--surface-2);
+  background-size: 24px 24px;
+  overflow: hidden;
+}
+.anim-stage * { animation-play-state: running; }
+.anim-stage.paused * { animation-play-state: paused !important; }
+
+/* ---- 通用元件 ---- */
+
+.a-node {
+  position: absolute;
+  display: grid;
+  place-items: center;
+  text-align: center;
+  padding: 6px 10px;
+  border-radius: var(--r-md);
+  background: var(--surface);
+  border: 1.5px solid var(--line-strong);
+  font-size: 13px;
+  line-height: 1.35;
+  box-shadow: var(--shadow-1);
+}
+.a-node small { display: block; font-size: 11px; color: var(--muted); font-family: var(--font-mono); }
+.a-node.accent { border-color: var(--accent); background: var(--accent-soft); }
+.a-node.ok     { border-color: var(--ok); background: var(--ok-soft); }
+.a-node.warn   { border-color: var(--warn); background: var(--warn-soft); }
+.a-node.danger { border-color: var(--danger); background: var(--danger-soft); }
+
+.a-pill {
+  position: absolute;
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: var(--r-full);
+  background: var(--surface-3);
+  color: var(--muted);
+  white-space: nowrap;
+}
+.a-label { position: absolute; font-size: 12px; font-weight: 700; color: var(--muted); letter-spacing: 0.06em; }
+
+.a-dot {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 22%, transparent);
+  z-index: 3;
+}
+.a-dot.ok { background: var(--ok); box-shadow: 0 0 0 4px color-mix(in srgb, var(--ok) 22%, transparent); }
+.a-dot.warn { background: var(--warn); box-shadow: 0 0 0 4px color-mix(in srgb, var(--warn) 22%, transparent); }
+.a-dot.info { background: var(--info); box-shadow: 0 0 0 4px color-mix(in srgb, var(--info) 22%, transparent); }
+
+.a-line {
+  position: absolute;
+  height: 0;
+  border-top: 2px dashed var(--line-strong);
+  z-index: 1;
+}
+.a-line.vertical { width: 0; height: auto; border-top: none; border-left: 2px dashed var(--line-strong); }
+
+/* 出现调度：delay 由内联 style 提供 */
+@keyframes st-show { from { opacity: 0; } to { opacity: 1; } }
+.a-sched {
+  opacity: 0;
+  animation: st-show 0.25s linear both;
+}
+
+/* 脉冲直线移动：终点由内联 --tx/--ty 提供，循环往复 */
+@keyframes st-travel-go {
+  0%   { transform: translate(0, 0); opacity: 0; }
+  4%   { opacity: 1; }
+  38%  { transform: translate(var(--tx, 0), var(--ty, 0)); opacity: 1; }
+  46%  { transform: translate(var(--tx, 0), var(--ty, 0)); opacity: 0; }
+  100% { transform: translate(var(--tx, 0), var(--ty, 0)); opacity: 0; }
+}
+@keyframes st-travel-back {
+  0%   { transform: translate(var(--tx, 0), var(--ty, 0)); opacity: 0; }
+  4%   { transform: translate(var(--tx, 0), var(--ty, 0)); opacity: 1; }
+  38%  { transform: translate(0, 0); opacity: 1; }
+  46%  { transform: translate(0, 0); opacity: 0; }
+  100% { transform: translate(0, 0); opacity: 0; }
+}
+
+@keyframes st-blink {
+  0%, 100% { opacity: 0.25; }
+  50% { opacity: 1; }
+}
+
+@keyframes st-grow-x { from { width: 0; } to { width: var(--w, 50%); } }
+
+@keyframes st-spin { to { transform: rotate(360deg); } }
+
+@keyframes st-caret { 0%, 49% { opacity: 1; } 50%, 100% { opacity: 0; } }
+
+/* ================= HTTP 请求响应 ================= */
+
+.st-http .browser { left: 6%; top: 42%; width: 130px; height: 64px; }
+.st-http .server  { right: 6%; top: 42%; width: 130px; height: 64px; }
+.st-http .lane    { left: 20%; right: 20%; top: 56%; }
+.st-http .req-chip {
+  left: 26%; top: 30%;
+  background: var(--info-soft); color: var(--info);
+  animation: st-show .25s both, st-blink calc(var(--T)) ease-in-out infinite;
+  animation-delay: var(--d1), 0s;
+}
+.st-http .res-chip {
+  right: 26%; bottom: 16%;
+  background: var(--ok-soft); color: var(--ok);
+  animation: st-show .25s both;
+  animation-delay: var(--d2);
+}
+.st-http .go-dot  { left: 21%; top: 52%; animation: st-travel-go calc(var(--T)) linear infinite; animation-delay: var(--d1); --tx: 58vw; }
+.st-http .back-dot{ right: 21%; top: 62%; animation: st-travel-back calc(var(--T)) linear infinite; animation-delay: var(--d2); }
+
+/* ================= TCP 三次握手 ================= */
+
+.st-tcp .client { left: 5%; top: 44%; width: 120px; height: 58px; }
+.st-tcp .server { right: 5%; top: 44%; width: 120px; height: 58px; }
+.st-tcp .l1 { left: 18%; right: 18%; top: 48%; }
+.st-tcp .step { left: 50%; transform: translateX(-50%); padding: 2px 10px; background: var(--accent-soft); color: var(--accent-strong); animation: st-show .25s both; }
+.st-tcp .s1 { top: 30%; animation-delay: calc(var(--T) * 0.06); }
+.st-tcp .s2 { top: 55%; animation-delay: calc(var(--T) * 0.39); }
+.st-tcp .s3 { top: 78%; animation-delay: calc(var(--T) * 0.72); }
+.st-tcp .d1 { left: 17%; top: 44%; --tx: 66vw; --ty: 4px; animation: st-travel-go var(--T) linear infinite; animation-delay: 0s; }
+.st-tcp .d2 { right: 17%; top: 52%; --tx: -66vw; --ty: 4px; animation: st-travel-back var(--T) linear infinite; animation-delay: calc(var(--T) * 0.33); }
+.st-tcp .d3 { left: 17%; top: 74%; --tx: 66vw; --ty: -4px; animation: st-travel-go var(--T) linear infinite; animation-delay: calc(var(--T) * 0.66); }
+
+/* ================= DNS 解析 ================= */
+
+.st-dns .client { left: 4%; top: 40%; width: 110px; height: 70px; }
+.st-dns .resolver { left: 32%; top: 40%; width: 130px; height: 70px; }
+.st-dns .root { left: 72%; top: 8%; }
+.st-dns .tld { left: 72%; top: 40%; }
+.st-dns .auth { left: 72%; top: 72%; }
+.st-dns .hop { animation: st-show .25s both; }
+.st-dns .ip-chip {
+  left: 33%; top: 14%;
+  background: var(--ok-soft); color: var(--ok);
+  font-family: var(--font-mono);
+  animation: st-show .25s both;
+  animation-delay: calc(var(--T) * 0.62);
+}
+.st-dns .h1 { left: 16%; top: 47%; --tx: 130px; animation: st-travel-go var(--T) linear infinite; }
+.st-dns .h2 { left: 46%; top: 47%; --tx: 150px; --ty: -60px; animation: st-travel-go var(--T) linear infinite; animation-delay: calc(var(--T) * 0.14); }
+.st-dns .h3 { left: 46%; top: 47%; --tx: 150px; animation: st-travel-go var(--T) linear infinite; animation-delay: calc(var(--T) * 0.28); }
+.st-dns .h4 { left: 46%; top: 47%; --tx: 150px; --ty: 60px; animation: st-travel-go var(--T) linear infinite; animation-delay: calc(var(--T) * 0.42); }
+.st-dns .h5 { left: 46%; top: 47%; --tx: -170px; animation: st-travel-back var(--T) linear infinite; --tx: -170px; animation-delay: calc(var(--T) * 0.56); }
+.st-dns .h6 { left: 16%; top: 47%; --tx: -110px; animation: st-travel-back var(--T) linear infinite; animation-delay: calc(var(--T) * 0.68); }
+
+/* ================= 栈：后进先出 ================= */
+
+.st-stack .box-container {
+  position: absolute;
+  left: 50%;
+  bottom: 14%;
+  transform: translateX(-50%);
+  width: 150px;
+  display: flex;
+  flex-direction: column-reverse;
+  gap: 6px;
+}
+.st-stack .box {
+  height: 34px;
+  border-radius: var(--r-sm);
+  display: grid;
+  place-items: center;
+  font-size: 12px;
+  font-family: var(--font-mono);
+  border: 1.5px solid var(--accent);
+  background: var(--accent-soft);
+  color: var(--accent-strong);
+}
+.st-stack .box.b2 { border-color: var(--info); background: var(--info-soft); color: var(--info); }
+.st-stack .box.b3 { border-color: var(--warn); background: var(--warn-soft); color: var(--warn); }
+.st-stack .box.b1 { animation: st-push var(--T) infinite; }
+.st-stack .box.b2 { animation: st-push var(--T) infinite; animation-delay: calc(var(--T) * 0.18); }
+.st-stack .box.b3 { animation: st-push var(--T) infinite; animation-delay: calc(var(--T) * 0.36); }
+.st-stack .hint-lifo {
+  position: absolute;
+  right: 8%;
+  top: 12%;
+  font-size: 12px;
+  color: var(--muted);
+  text-align: right;
+  line-height: 1.9;
+}
+.st-stack .hint-lifo b { color: var(--accent-strong); }
+@keyframes st-push {
+  0% { opacity: 0; transform: translateY(-70px); }
+  6%, 14% { opacity: 1; transform: translateY(0); }
+  /* b1 在 62%~80% 弹出，b2 在 76%~94%，b3 在 90%~100% —— 用同一关键帧近似错相弹出 */
+  20%, 54% { opacity: 1; transform: translateY(0); }
+  60% { opacity: 0; transform: translateY(-70px); }
+  100% { opacity: 0; transform: translateY(-70px); }
+}
+.st-stack .box.b2 { animation-name: st-push-late1; }
+.st-stack .box.b3 { animation-name: st-push-late2; }
+@keyframes st-push-late1 {
+  0%, 16% { opacity: 0; transform: translateY(-70px); }
+  22%, 66% { opacity: 1; transform: translateY(0); }
+  72% { opacity: 0; transform: translateY(-70px); }
+  100% { opacity: 0; transform: translateY(-70px); }
+}
+@keyframes st-push-late2 {
+  0%, 32% { opacity: 0; transform: translateY(-70px); }
+  38%, 82% { opacity: 1; transform: translateY(0); }
+  88% { opacity: 0; transform: translateY(-70px); }
+  100% { opacity: 0; transform: translateY(-70px); }
+}
+
+/* ================= 队列：先进先出 ================= */
+
+.st-queue .pipe {
+  position: absolute;
+  left: 6%;
+  right: 6%;
+  top: 46%;
+  height: 44px;
+  border: 2px dashed var(--line-strong);
+  border-radius: var(--r-md);
+  background: color-mix(in srgb, var(--surface) 60%, transparent);
+}
+.st-queue .item {
+  position: absolute;
+  top: 47%;
+  width: 64px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  border-radius: var(--r-sm);
+  font-size: 12px;
+  font-family: var(--font-mono);
+  border: 1.5px solid var(--accent);
+  background: var(--accent-soft);
+  color: var(--accent-strong);
+  animation: st-queue-move var(--T) linear infinite;
+}
+.st-queue .item.i2 { border-color: var(--info); background: var(--info-soft); color: var(--info); animation-delay: calc(var(--T) * 0.14); }
+.st-queue .item.i3 { border-color: var(--warn); background: var(--warn-soft); color: var(--warn); animation-delay: calc(var(--T) * 0.28); }
+.st-queue .in-label { left: 3%; top: 62%; }
+.st-queue .out-label { right: 3%; top: 62%; }
+.st-queue .fifo-note {
+  left: 50%; top: 12%;
+  transform: translateX(-50%);
+  font-size: 12px;
+  color: var(--muted);
+}
+@keyframes st-queue-move {
+  0% { left: -8%; opacity: 0; }
+  8% { opacity: 1; }
+  92% { opacity: 1; }
+  100% { left: 104%; opacity: 0; }
+}
+
+/* ================= 回调链 ================= */
+
+.st-callback .fn {
+  position: absolute;
+  width: 150px;
+  height: 52px;
+  display: grid;
+  place-items: center;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  border-radius: var(--r-md);
+  border: 1.5px solid var(--line-strong);
+  background: var(--surface);
+  animation: st-lighten var(--T) infinite;
+}
+.st-callback .f1 { left: 6%;  top: 20%; animation-delay: 0s; }
+.st-callback .f2 { left: 36%; top: 42%; animation-delay: calc(var(--T) * 0.18); }
+.st-callback .f3 { left: 66%; top: 64%; animation-delay: calc(var(--T) * 0.36); }
+.st-callback .arrow {
+  position: absolute;
+  font-size: 18px;
+  color: var(--line-strong);
+  animation: st-lighten var(--T) infinite;
+}
+.st-callback .a1 { left: 27%; top: 30%; animation-delay: calc(var(--T) * 0.09); }
+.st-callback .a2 { left: 57%; top: 52%; animation-delay: calc(var(--T) * 0.27); }
+.st-callback .note {
+  position: absolute;
+  right: 6%;
+  top: 12%;
+  max-width: 240px;
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.8;
+}
+.st-callback .result {
+  position: absolute;
+  left: 6%;
+  bottom: 8%;
+  background: var(--ok-soft);
+  color: var(--ok);
+  animation: st-lighten var(--T) infinite;
+  animation-delay: calc(var(--T) * 0.54);
+}
+@keyframes st-lighten {
+  0%, 4% { border-color: var(--line-strong); background: var(--surface); box-shadow: none; }
+  10%, 30% { border-color: var(--accent); background: var(--accent-soft); box-shadow: var(--shadow-2); }
+  40%, 100% { border-color: var(--line-strong); background: var(--surface); box-shadow: none; }
+}
+
+/* ================= 事件循环 ================= */
+
+.st-eloop .callstack {
+  position: absolute;
+  left: 6%;
+  top: 14%;
+  width: 180px;
+  height: 68%;
+  border: 1.5px solid var(--line-strong);
+  border-radius: var(--r-md);
+  background: var(--surface);
+}
+.st-eloop .webapi {
+  position: absolute;
+  right: 6%;
+  top: 14%;
+  width: 180px;
+  height: 30%;
+  border: 1.5px solid var(--warn);
+  border-radius: var(--r-md);
+  background: var(--warn-soft);
+  display: grid;
+  place-items: center;
+  font-size: 12px;
+  color: var(--warn);
+}
+.st-eloop .taskq {
+  position: absolute;
+  right: 6%;
+  bottom: 12%;
+  width: 180px;
+  height: 24%;
+  border: 1.5px solid var(--info);
+  border-radius: var(--r-md);
+  background: var(--info-soft);
+  display: grid;
+  place-items: center;
+  font-size: 12px;
+  color: var(--info);
+}
+.st-eloop .loop-dot {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 220px;
+  height: 190px;
+  margin: -95px 0 0 -110px;
+  animation: st-spin calc(var(--T)) linear infinite;
+}
+.st-eloop .loop-dot::before {
+  content: "⟳";
+  position: absolute;
+  left: 50%;
+  top: -14px;
+  transform: translateX(-50%);
+  font-size: 20px;
+  color: var(--accent);
+}
+.st-eloop .cs-title, .st-eloop .stack-task {
+  position: absolute;
+  font-size: 12px;
+  font-family: var(--font-mono);
+}
+.st-eloop .cs-title { left: 12%; top: 17%; color: var(--muted); }
+.st-eloop .stack-task {
+  left: 10%;
+  bottom: 20%;
+  padding: 3px 8px;
+  border-radius: var(--r-sm);
+  background: var(--accent-soft);
+  color: var(--accent-strong);
+  animation: st-show .25s both;
+}
+.st-eloop .t1 { animation-delay: calc(var(--T) * 0.05); }
+.st-eloop .t2 { bottom: 30%; animation-delay: calc(var(--T) * 0.45); }
+
+/* ================= 发布订阅 ================= */
+
+.st-pubsub .publisher { left: 4%; top: 44%; }
+.st-pubsub .broker {
+  left: 42%;
+  top: 40%;
+  width: 120px;
+  height: 60px;
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  font-weight: 700;
+}
+.st-pubsub .sub1 { right: 4%; top: 10%; }
+.st-pubsub .sub2 { right: 4%; top: 44%; }
+.st-pubsub .sub3 { right: 4%; top: 78%; }
+.st-pubsub .p-dot { left: 15%; top: 52%; --tx: 210px; --ty: -6px; animation: st-travel-go var(--T) linear infinite; }
+.st-pubsub .s1d { left: 60%; top: 52%; --tx: 160px; --ty: -84px; animation: st-travel-go var(--T) linear infinite; animation-delay: calc(var(--T) * 0.12); }
+.st-pubsub .s2d { left: 60%; top: 52%; --tx: 160px; --ty: 0px; animation: st-travel-go var(--T) linear infinite; animation-delay: calc(var(--T) * 0.14); }
+.st-pubsub .s3d { left: 60%; top: 52%; --tx: 160px; --ty: 84px; animation: st-travel-go var(--T) linear infinite; animation-delay: calc(var(--T) * 0.16); }
+.st-pubsub .topic-tag {
+  left: 43%;
+  top: 24%;
+  background: var(--accent-soft);
+  color: var(--accent-strong);
+  font-family: var(--font-mono);
+}
+
+/* ================= 同步 vs 异步（双车道） ================= */
+
+.st-sync .row-label { left: 3%; font-size: 13px; font-weight: 700; }
+.st-sync .rl-sync { top: 22%; }
+.st-sync .rl-async { top: 62%; }
+.st-sync .track {
+  position: absolute;
+  left: 14%;
+  right: 5%;
+  height: 26px;
+  border-radius: var(--r-sm);
+  background: var(--surface-3);
+  overflow: hidden;
+}
+.st-sync .trk-sync { top: 18%; }
+.st-sync .trk-async { top: 58%; }
+.st-sync .seg {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  display: grid;
+  place-items: center;
+  font-size: 11px;
+  font-family: var(--font-mono);
+  color: #fff;
+  background: var(--accent);
+  animation: st-grow-x var(--T) linear infinite;
+}
+[data-theme="dark"] .st-sync .seg { color: var(--on-accent); }
+.st-sync .sg1 { left: 0; --w: 33%; animation-delay: 0s; }
+.st-sync .sg2 { left: 33%; --w: 34%; animation-delay: calc(var(--T) * 0.33); }
+.st-sync .sg3 { left: 67%; --w: 33%; animation-delay: calc(var(--T) * 0.67); }
+.st-sync .aseg1 { left: 0; --w: 30%; animation-delay: calc(var(--T) * 0.02); }
+.st-sync .aseg2 { left: 30%; --w: 30%; background: var(--warn); animation-delay: calc(var(--T) * 0.4); }
+.st-sync .aseg3 { left: 60%; --w: 30%; animation-delay: calc(var(--T) * 0.72); }
+.st-sync .free-chip {
+  position: absolute;
+  left: 32%;
+  top: 66%;
+  background: var(--ok-soft);
+  color: var(--ok);
+  animation: st-show .25s both, st-hide var(--T) infinite;
+  animation-delay: calc(var(--T) * 0.12), 0s;
+}
+.st-sync .foot-note {
+  position: absolute;
+  right: 5%;
+  bottom: 4%;
+  font-size: 11px;
+  color: var(--muted);
+}
+@keyframes st-hide { 0%, 10% { opacity: 0; } 14%, 60% { opacity: 1; } 66%, 100% { opacity: 0; } }
+
+/* ================= 缓存命中 / 未命中 ================= */
+
+.st-cache .client { left: 4%; top: 42%; }
+.st-cache .cache-node {
+  left: 40%;
+  top: 42%;
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  font-weight: 700;
+}
+.st-cache .origin { right: 5%; top: 42%; }
+.st-cache .hit-lane  { left: 16%; right: 40%; top: 50%; border-color: var(--ok); }
+.st-cache .miss-lane { left: 16%; right: 16%; top: 78%; border-color: var(--warn); }
+.st-cache .lane-tag { font-size: 11px; top: -22px; left: 0; }
+.st-cache .lt-hit  { color: var(--ok); }
+.st-cache .lt-miss { color: var(--warn); }
+.st-cache .hit-dot  { left: 16%; top: 46%; --tx: 250px; animation: st-travel-go var(--T) linear infinite; animation-delay: calc(var(--T) * 0.05); }
+.st-cache .hit-back { left: 40%; top: 46%; animation: st-travel-back var(--T) linear infinite; --tx: -250px; animation-delay: calc(var(--T) * 0.2); }
+.st-cache .miss-dot  { left: 16%; top: 74%; --tx: 480px; animation: st-travel-go var(--T) linear infinite; animation-delay: calc(var(--T) * 0.45); }
+.st-cache .miss-back { right: 16%; top: 74%; animation: st-travel-back var(--T) linear infinite; --tx: -480px; animation-delay: calc(var(--T) * 0.68); }
+
+/* ================= Git 分支合并 ================= */
+
+.st-git .main-track {
+  position: absolute;
+  left: 8%;
+  right: 8%;
+  top: 30%;
+  border-top: 3px solid var(--accent);
+  z-index: 1;
+}
+.st-git .feat-track {
+  position: absolute;
+  left: 26%;
+  right: 26%;
+  top: 66%;
+  border-top: 3px solid var(--warn);
+  z-index: 1;
+}
+.st-git .track-label { top: 12%; font-size: 12px; font-family: var(--font-mono); }
+.st-git .lb-main { left: 8%; color: var(--accent-strong); }
+.st-git .lb-feat { left: 26%; top: 74%; color: var(--warn); }
+.st-git .commit {
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--surface);
+  border: 3px solid var(--accent);
+  z-index: 2;
+}
+.st-git .c1 { left: 14%; top: 27%; animation: st-show .25s both; animation-delay: calc(var(--T) * 0.04); }
+.st-git .c2 { left: 40%; top: 27%; animation: st-show .25s both; animation-delay: calc(var(--T) * 0.4); }
+.st-git .c3 { left: 86%; top: 27%; animation: st-show .25s both; animation-delay: calc(var(--T) * 0.82); }
+.st-git .fc1, .st-git .fc2 { border-color: var(--warn); }
+.st-git .fc1 { left: 38%; top: 63%; animation: st-show .25s both; animation-delay: calc(var(--T) * 0.2); }
+.st-git .fc2 { left: 62%; top: 63%; animation: st-show .25s both; animation-delay: calc(var(--T) * 0.32); }
+.st-git .merge-path {
+  position: absolute;
+  left: 63%;
+  top: 30%;
+  width: 23%;
+  height: 36%;
+  border-right: 0;
+  border-top: 0;
+  border-bottom: 3px solid transparent;
+  border-radius: 0 0 0 100%/ 0 0 0 100%;
+  border-left: 3px solid var(--warn);
+  border-bottom-color: var(--warn);
+  transform: scaleY(-1) translateY(-100%);
+  z-index: 1;
+  opacity: 0;
+  animation: st-show .3s both;
+  animation-delay: calc(var(--T) * 0.7);
+}
+.st-git .merge-tag {
+  left: 50%;
+  top: 6%;
+  transform: translateX(-50%);
+  background: var(--ok-soft);
+  color: var(--ok);
+  animation: st-show .25s both;
+  animation-delay: calc(var(--T) * 0.86);
+}
+
+/* ================= Token 流式输出 ================= */
+
+.st-token .prompt-box {
+  position: absolute;
+  left: 5%;
+  top: 10%;
+  right: 5%;
+  padding: var(--s2) var(--s3);
+  border: 1.5px solid var(--line-strong);
+  border-radius: var(--r-md);
+  background: var(--surface);
+  font-size: 12px;
+  color: var(--muted);
+}
+.st-token .out-box {
+  position: absolute;
+  left: 5%;
+  top: 42%;
+  right: 5%;
+  bottom: 22%;
+  padding: var(--s2) var(--s3);
+  border: 1.5px solid var(--accent);
+  border-radius: var(--r-md);
+  background: var(--surface);
+  font-size: 13px;
+  line-height: 1.9;
+}
+.st-token .tok {
+  display: inline-block;
+  padding: 0 3px;
+  margin: 1px 0;
+  border-radius: 4px;
+  background: var(--accent-soft);
+  color: var(--accent-strong);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  opacity: 0;
+  animation: st-show .15s both;
+  animation-delay: var(--td);
+}
+.st-token .caret {
+  display: inline-block;
+  width: 8px;
+  height: 16px;
+  background: var(--accent);
+  vertical-align: -2px;
+  animation: st-caret 0.9s step-end infinite;
+}
+.st-token .counter {
+  position: absolute;
+  right: 5%;
+  bottom: 8%;
+  font-size: 11px;
+  font-family: var(--font-mono);
+  color: var(--muted);
+}
+
+/* 小屏适配 */
+@media (max-width: 700px) {
+  .anim-stage { height: 320px; }
+  .a-node { font-size: 12px; padding: 4px 8px; }
+  .st-eloop .callstack, .st-eloop .webapi, .st-eloop .taskq { width: 132px; }
+  .st-eloop .loop-dot { width: 170px; height: 190px; margin-left: -85px; }
+}

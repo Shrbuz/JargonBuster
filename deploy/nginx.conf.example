@@ -1,0 +1,46 @@
+# ============================================================
+# standard-term · Nginx 部署示例
+# 零构建站点：git pull 之后把 root 指向仓库目录即可。
+# 用法：复制为 /etc/nginx/conf.d/standard-term.conf 后 nginx -s reload
+# ============================================================
+
+server {
+    listen 80;
+    listen [::]:80;
+    server_name term.example.com;          # 换成你的域名
+
+    # 仓库根目录（按实际路径修改）
+    root /var/www/standard-term;
+    index index.html;
+
+    # 全站 gzip：词条文本压缩率高，收益明显
+    gzip on;
+    gzip_comp_level 5;
+    gzip_types text/css application/javascript application/json image/svg+xml;
+
+    # 静态资源缓存：文件名不含 hash，用较短时间
+    location /assets/ {
+        expires 1h;
+        add_header Cache-Control "public";
+    }
+
+    # 站点使用 hash 路由（#/t/xxx），理论上无需回退规则；
+    # 加上 try_files 以防直接访问不存在的物理路径时返回首页而非 404 裸页。
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+
+    # 可选：HTTPS 跳转（启用前先用 certbot 签发证书）
+    # return 301 https://$host$request_uri;
+}
+
+# HTTPS 版本骨架：
+# server {
+#     listen 443 ssl http2;
+#     server_name term.example.com;
+#     root /var/www/standard-term;
+#     index index.html;
+#     ssl_certificate     /etc/letsencrypt/live/term.example.com/fullchain.pem;
+#     ssl_certificate_key /etc/letsencrypt/live/term.example.com/privkey.pem;
+#     location / { try_files $uri $uri/ /index.html; }
+# }

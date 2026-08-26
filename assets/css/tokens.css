@@ -1,0 +1,123 @@
+/* ============================================================
+   standard-term · Design Tokens
+   单一取值来源：颜色 / 间距 / 字号 / 圆角 / 阴影 / 动效时长
+   ============================================================ */
+
+:root {
+  /* ---- 字体 ---- */
+  --font-sans: "Segoe UI", system-ui, -apple-system, "PingFang SC",
+    "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", sans-serif;
+  --font-mono: ui-monospace, "Cascadia Code", Consolas, "Courier New", monospace;
+
+  /* ---- 字号阶梯 ---- */
+  --fs-xs: 12px;
+  --fs-sm: 13px;
+  --fs-md: 15px;
+  --fs-base: 16px;
+  --fs-lg: 18px;
+  --fs-xl: 22px;
+  --fs-2xl: 28px;
+  --fs-3xl: 34px;
+
+  /* ---- 间距刻度（4px 基准） ---- */
+  --s1: 4px;
+  --s2: 8px;
+  --s3: 12px;
+  --s4: 16px;
+  --s5: 24px;
+  --s6: 32px;
+  --s7: 48px;
+  --s8: 72px;
+
+  /* ---- 圆角 ---- */
+  --r-sm: 6px;
+  --r-md: 10px;
+  --r-lg: 14px;
+  --r-full: 999px;
+
+  /* ---- 阴影 ---- */
+  --shadow-1: 0 1px 2px rgba(30, 26, 18, 0.06), 0 1px 6px rgba(30, 26, 18, 0.05);
+  --shadow-2: 0 4px 14px rgba(30, 26, 18, 0.1), 0 2px 4px rgba(30, 26, 18, 0.06);
+  --shadow-3: 0 12px 32px rgba(30, 26, 18, 0.16);
+
+  /* ---- 动效 ---- */
+  --t-fast: 140ms;
+  --t-med: 200ms;
+
+  /* ---- 布局 ---- */
+  --header-h: 60px;
+  --sidebar-w: 236px;
+  --content-max: 860px;
+  --prose-max: 70ch;
+
+  /* ---- 亮色主题 ---- */
+  --bg: #f6f4ee;
+  --surface: #fffdf8;
+  --surface-2: #efece3;
+  --surface-3: #e7e3d7;
+  --text: #26221b;
+  --muted: #6d665a;
+  --line: #e2dccd;
+  --line-strong: #cdc5b2;
+
+  --accent: #0e6b5b;
+  --accent-strong: #0a5548;
+  --accent-soft: #e0eeea;
+  --on-accent: #ffffff;
+
+  --ok: #2e7d43;
+  --ok-soft: #e4f0e4;
+  --warn: #9a5b10;
+  --warn-soft: #f7ecd9;
+  --danger: #ab3f38;
+  --danger-soft: #f7e5e2;
+  --info: #3556a5;
+  --info-soft: #e5eaf6;
+
+  --mark-bg: #f3e3ae;
+}
+
+[data-theme="dark"] {
+  --bg: #14161a;
+  --surface: #1c1f24;
+  --surface-2: #22262c;
+  --surface-3: #2b3037;
+  --text: #e8e5dd;
+  --muted: #a49d90;
+  --line: #30343b;
+  --line-strong: #454b54;
+
+  --accent: #52c3ac;
+  --accent-strong: #74d4c0;
+  --accent-soft: #1e332e;
+  --on-accent: #10231e;
+
+  --ok: #6fbf82;
+  --ok-soft: #20301f;
+  --warn: #dfa75c;
+  --warn-soft: #33291a;
+  --danger: #e08577;
+  --danger-soft: #361f1c;
+  --info: #8fa9dd;
+  --info-soft: #20263a;
+
+  --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.35), 0 1px 6px rgba(0, 0, 0, 0.25);
+  --shadow-2: 0 4px 14px rgba(0, 0, 0, 0.4), 0 2px 4px rgba(0, 0, 0, 0.3);
+  --shadow-3: 0 12px 32px rgba(0, 0, 0, 0.5);
+
+  --mark-bg: #574c1f;
+}
+
+/* 分类色板：仅用于小色点 / 细边等点缀，不做大面积铺色 */
+:root {
+  --cat-basics: #4c7db3;
+  --cat-dsa: #8a6bbf;
+  --cat-frontend: #3a8f85;
+  --cat-backend: #b3703c;
+  --cat-database: #4f8a5c;
+  --cat-network: #5a6fb8;
+  --cat-git: #b3543f;
+  --cat-engineering: #93813c;
+  --cat-architecture: #7c5aa0;
+  --cat-ai: #3f8fa8;
+}
