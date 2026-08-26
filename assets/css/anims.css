@@ -615,6 +615,379 @@
   color: var(--muted);
 }
 
+/* ================= CSS 优先级 ================= */
+
+.st-spec .sel {
+  position: absolute;
+  top: 18%;
+  width: 150px;
+  height: 56px;
+  display: grid;
+  place-items: center;
+  font-family: var(--font-mono);
+  font-size: 14px;
+  border-radius: var(--r-md);
+  border: 1.5px solid var(--line-strong);
+  background: var(--surface);
+  animation: st-lighten var(--T) infinite;
+}
+.st-spec .s1 { left: 6%;  animation-delay: 0s; }
+.st-spec .s2 { left: 37%; animation-delay: calc(var(--T) * 0.22); }
+.st-spec .s3 { left: 68%; animation-delay: calc(var(--T) * 0.44); }
+.st-spec .spec-badge {
+  position: absolute;
+  top: 44%;
+  width: 150px;
+  text-align: center;
+  font-size: 11px;
+  font-family: var(--font-mono);
+  color: var(--muted);
+  animation: st-show .25s both;
+}
+.st-spec .b1 { left: 6%;  animation-delay: calc(var(--T) * 0.08); }
+.st-spec .b2 { left: 37%; animation-delay: calc(var(--T) * 0.3); }
+.st-spec .b3 { left: 68%; animation-delay: calc(var(--T) * 0.52); }
+.st-spec .spec-win {
+  left: 50%;
+  bottom: 8%;
+  transform: translateX(-50%);
+  background: var(--ok-soft);
+  color: var(--ok);
+  animation: st-show .25s both;
+  animation-delay: calc(var(--T) * 0.72);
+}
+
+/* ================= margin 塌陷 ================= */
+
+.st-collapse .block {
+  position: absolute;
+  left: 18%;
+  right: 18%;
+  height: 46px;
+  display: grid;
+  place-items: center;
+  border-radius: var(--r-md);
+  font-size: 12px;
+  text-align: center;
+}
+.st-collapse .block small { display: block; font-size: 10px; color: var(--muted); font-family: var(--font-mono); }
+.st-collapse .up   { top: 8%; background: var(--info-soft); border: 1.5px solid var(--info); color: var(--info); }
+.st-collapse .down { top: 58%; background: var(--accent-soft); border: 1.5px solid var(--accent); color: var(--accent-strong); }
+.st-collapse .mline {
+  position: absolute;
+  left: 26%;
+  right: 26%;
+  height: 0;
+  border-top: 2px dashed var(--warn);
+  animation: st-show .3s both;
+}
+.st-collapse .m1 { top: 30%; opacity: 0; animation: st-absorb var(--T) linear infinite; animation-delay: calc(var(--T) * 0.08); }
+.st-collapse .m2 { top: 46%; animation: st-absorb-keep var(--T) linear infinite; animation-delay: calc(var(--T) * 0.2); }
+.st-collapse .m-note {
+  left: 50%;
+  bottom: 6%;
+  transform: translateX(-50%);
+  background: var(--warn-soft);
+  color: var(--warn);
+  animation: st-show .25s both;
+  animation-delay: calc(var(--T) * 0.55);
+}
+@keyframes st-absorb {
+  0%, 26% { opacity: 1; }
+  38%, 100% { opacity: 0; }
+}
+@keyframes st-absorb-keep {
+  0%, 18% { opacity: 0; }
+  30%, 92% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+/* ================= 层叠上下文 ================= */
+
+.st-stackctx .panel {
+  position: absolute;
+  top: 14%;
+  width: 200px;
+  height: 150px;
+  border-radius: var(--r-md);
+  font-size: 12px;
+  text-align: center;
+  padding-top: 8px;
+  z-index: 1;
+}
+.st-stackctx .pa { left: 8%;  background: var(--info-soft); border: 2px solid var(--info); color: var(--info); animation: st-flash var(--T) infinite; animation-delay: 0s; }
+.st-stackctx .pb { left: 44%; background: var(--accent-soft); border: 2px solid var(--accent); color: var(--accent-strong); z-index: 2; animation: st-flash var(--T) infinite; animation-delay: calc(var(--T) * 0.5); }
+.st-stackctx .inner {
+  position: absolute;
+  width: 88px;
+  height: 56px;
+  display: grid;
+  place-items: center;
+  border-radius: var(--r-sm);
+  font-size: 11px;
+  font-family: var(--font-mono);
+  background: var(--surface);
+  animation: st-blink var(--T) infinite;
+}
+.st-stackctx .ia { right: -30px; top: 52%; border: 1.5px solid var(--info); color: var(--info); animation-delay: calc(var(--T) * 0.2); }
+.st-stackctx .ib { left: 12px;  top: 52%; border: 1.5px solid var(--accent); color: var(--accent-strong); animation-delay: calc(var(--T) * 0.6); }
+.st-stackctx .ctx-note {
+  left: 50%;
+  bottom: 6%;
+  transform: translateX(-50%);
+  max-width: 92%;
+  text-align: center;
+  background: var(--ok-soft);
+  color: var(--ok);
+  animation: st-show .25s both;
+  animation-delay: calc(var(--T) * 0.7);
+}
+@keyframes st-flash {
+  0%, 20% { box-shadow: 0 0 0 3px color-mix(in srgb, currentColor 30%, transparent); }
+  28%, 100% { box-shadow: none; }
+}
+
+/* ================= 变量提升 ================= */
+
+.st-hoist .code-line {
+  position: absolute;
+  left: 8%;
+  width: 320px;
+  padding: 8px 12px;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  border-radius: var(--r-sm);
+  background: var(--surface);
+  border: 1.5px solid var(--line-strong);
+  animation: st-show .25s both;
+}
+.st-hoist .l1 { top: 20%; animation-delay: calc(var(--T) * 0.05); }
+.st-hoist .l2 { top: 46%; animation-delay: calc(var(--T) * 0.4); border-color: var(--accent); }
+.st-hoist .hoist-ghost {
+  position: absolute;
+  left: 8%;
+  top: 4%;
+  font-size: 11px;
+  color: var(--warn);
+  animation: st-show .25s both;
+  animation-delay: calc(var(--T) * 0.18);
+}
+.st-hoist .val {
+  position: absolute;
+  padding: 3px 10px;
+  border-radius: var(--r-full);
+  font-size: 12px;
+  font-family: var(--font-mono);
+  animation: st-show .25s both;
+}
+.st-hoist .v1 { background: var(--warn-soft); color: var(--warn); animation-delay: calc(var(--T) * 0.3); }
+.st-hoist .v2 { background: var(--ok-soft); color: var(--ok); animation-delay: calc(var(--T) * 0.58); }
+.st-hoist .tdz-tag {
+  left: 8%;
+  bottom: 10%;
+  background: var(--danger-soft);
+  color: var(--danger);
+  animation: st-show .25s both;
+  animation-delay: calc(var(--T) * 0.76);
+}
+
+/* ================= 短路求值 ================= */
+
+.st-short .op-label { left: 6%; font-size: 12px; font-family: var(--font-mono); }
+.st-short .l-and { top: 14%; }
+.st-short .l-or { top: 54%; }
+.st-short .operand {
+  position: absolute;
+  width: 76px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  border-radius: var(--r-sm);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  border: 1.5px solid var(--accent);
+  background: var(--accent-soft);
+  color: var(--accent-strong);
+  animation: st-lighten var(--T) infinite;
+}
+.st-short .a1 { left: 16%; top: 12%; animation-delay: 0s; }
+.st-short .a2 { left: 16%; top: 52%; animation-delay: calc(var(--T) * 0.5); }
+.st-short .b1, .st-short .b2 {
+  left: 42%;
+  border-color: var(--line-strong);
+  background: var(--surface);
+  color: var(--muted);
+  animation: st-blink var(--T) infinite;
+}
+.st-short .b1 { top: 12%; animation-delay: calc(var(--T) * 0.14); }
+.st-short .b2 { top: 52%; animation-delay: calc(var(--T) * 0.64); }
+.st-short .result {
+  position: absolute;
+  width: 120px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  border-radius: var(--r-sm);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  border: 1.5px solid var(--ok);
+  background: var(--ok-soft);
+  color: var(--ok);
+  animation: st-lighten var(--T) infinite;
+}
+.st-short .r1 { left: 70%; top: 12%; animation-delay: calc(var(--T) * 0.28); }
+.st-short .r2 { left: 70%; top: 52%; animation-delay: calc(var(--T) * 0.78); }
+.st-short .skip {
+  border-color: var(--info);
+  opacity: 0;
+  animation: st-blink var(--T) infinite;
+}
+.st-short .sk1 { animation-delay: calc(var(--T) * 0.18); }
+.st-short .sk2 { animation-delay: calc(var(--T) * 0.68); }
+.st-short .short-note {
+  left: 50%;
+  bottom: 6%;
+  transform: translateX(-50%);
+  max-width: 92%;
+  text-align: center;
+  background: var(--info-soft);
+  color: var(--info);
+  animation: st-show .25s both;
+  animation-delay: calc(var(--T) * 0.6);
+}
+
+/* ================= 隐式类型转换 ================= */
+
+.st-coerce .co-title { left: 6%; top: 3%; font-size: 12px; }
+.st-coerce .co-left, .st-coerce .co-conv, .st-coerce .co-right, .st-coerce .co-res {
+  position: absolute;
+  display: grid;
+  place-items: center;
+  height: 32px;
+  border-radius: var(--r-sm);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  animation: st-show .25s both;
+}
+.st-coerce .co-left { left: 5%; width: 96px; background: var(--info-soft); border: 1.5px solid var(--info); color: var(--info); }
+.st-coerce .co-conv { left: 27%; width: 130px; background: var(--surface); border: 1.5px dashed var(--line-strong); color: var(--muted); }
+.st-coerce .co-right { left: 51%; width: 90px; background: var(--accent-soft); border: 1.5px solid var(--accent); color: var(--accent-strong); }
+.st-coerce .co-res { left: 71%; width: 140px; background: var(--ok-soft); border: 1.5px solid var(--ok); color: var(--ok); }
+.st-coerce .co-res.warn { background: var(--danger-soft); border-color: var(--danger); color: var(--danger); }
+.st-coerce .l1 { top: 14%; animation-delay: calc(var(--T) * 0.06); }
+.st-coerce .l2 { top: 33%; animation-delay: calc(var(--T) * 0.26); }
+.st-coerce .l3 { top: 52%; animation-delay: calc(var(--T) * 0.46); }
+.st-coerce .l4 { top: 71%; animation-delay: calc(var(--T) * 0.66); }
+.st-coerce .co-note {
+  left: 50%;
+  bottom: 2%;
+  transform: translateX(-50%);
+  background: var(--warn-soft);
+  color: var(--warn);
+  animation: st-show .25s both;
+  animation-delay: calc(var(--T) * 0.8);
+}
+
+/* ================= fetch vs pull ================= */
+
+.st-fetchpull .rp-track {
+  position: absolute;
+  left: 10%;
+  right: 10%;
+  top: 26%;
+  border-top: 3px solid var(--info);
+  z-index: 1;
+}
+.st-fetchpull .lp-track {
+  position: absolute;
+  left: 10%;
+  right: 10%;
+  top: 68%;
+  border-top: 3px solid var(--accent);
+  z-index: 1;
+}
+.st-fetchpull .track-label { top: 6%; font-size: 12px; font-family: var(--font-mono); }
+.st-fetchpull .lb-remote { left: 10%; color: var(--info); }
+.st-fetchpull .lb-local { left: 10%; top: 76%; color: var(--accent-strong); }
+.st-fetchpull .commit, .st-fetchpull .fetched {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--surface);
+  z-index: 2;
+  animation: st-show .25s both;
+}
+.st-fetchpull .commit { border: 3px solid var(--info); }
+.st-fetchpull .rc1 { left: 18%; top: 23%; animation-delay: calc(var(--T) * 0.04); }
+.st-fetchpull .rc2 { left: 62%; top: 23%; animation-delay: calc(var(--T) * 0.3); }
+.st-fetchpull .lc1 { left: 18%; top: 65%; border-color: var(--accent); animation-delay: calc(var(--T) * 0.04); }
+.st-fetchpull .fetched { border: 3px solid var(--warn); }
+.st-fetchpull .fc1 { left: 40%; top: 65%; animation-delay: calc(var(--T) * 0.22); }
+.st-fetchpull .fc2 { left: 70%; top: 65%; animation-delay: calc(var(--T) * 0.36); }
+.st-fetchpull .fetch-tag {
+  left: 50%;
+  top: 44%;
+  transform: translateX(-50%);
+  background: var(--info-soft);
+  color: var(--info);
+  animation: st-show .25s both;
+  animation-delay: calc(var(--T) * 0.48);
+}
+.st-fetchpull .pull-tag {
+  left: 50%;
+  bottom: 2%;
+  transform: translateX(-50%);
+  background: var(--ok-soft);
+  color: var(--ok);
+  animation: st-show .25s both;
+  animation-delay: calc(var(--T) * 0.62);
+}
+
+/* ================= 事务隔离 ================= */
+
+.st-txiso .t1 { left: 6%; top: 34%; }
+.st-txiso .t2 { right: 6%; top: 34%; }
+.st-txiso .db-box {
+  position: absolute;
+  left: 50%;
+  top: 28%;
+  transform: translateX(-50%);
+  width: 150px;
+  height: 56px;
+  display: grid;
+  place-items: center;
+  text-align: center;
+  border: 1.5px solid var(--warn);
+  background: var(--warn-soft);
+  color: var(--warn);
+  border-radius: var(--r-md);
+  animation: st-blink var(--T) infinite;
+}
+.st-txiso .db-box small { display: block; font-size: 10px; color: var(--muted); font-family: var(--font-mono); }
+.st-txiso .dirty-d { animation-delay: calc(var(--T) * 0.16); }
+.st-txiso .commit-d { animation-delay: calc(var(--T) * 0.5); }
+.st-txiso .dirty-tag {
+  left: 50%;
+  top: 52%;
+  transform: translateX(-50%);
+  background: var(--danger-soft);
+  color: var(--danger);
+  animation: st-show .25s both;
+  animation-delay: calc(var(--T) * 0.3);
+}
+.st-txiso .commit-tag {
+  left: 50%;
+  bottom: 6%;
+  transform: translateX(-50%);
+  max-width: 92%;
+  text-align: center;
+  background: var(--ok-soft);
+  color: var(--ok);
+  animation: st-show .25s both;
+  animation-delay: calc(var(--T) * 0.62);
+}
+
 /* 小屏适配 */
 @media (max-width: 700px) {
   .anim-stage { height: 320px; }

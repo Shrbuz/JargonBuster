@@ -235,9 +235,11 @@ code {
   transition: background var(--t-fast), color var(--t-fast);
 }
 .icon-btn:hover { background: var(--surface-2); color: var(--text); }
-[data-theme="dark"] .icon-sun { display: none; }
-.icon-btn .icon-moon { display: none; }
-[data-theme="dark"] .icon-btn .icon-moon { display: block; }
+/* 主题切换按钮：浅色显示月亮，暗色显示太阳 */
+.icon-btn .icon-sun { display: none; }
+.icon-btn .icon-moon { display: block; }
+[data-theme="dark"] .icon-btn .icon-sun { display: block; }
+[data-theme="dark"] .icon-btn .icon-moon { display: none; }
 
 .btn {
   display: inline-flex;
@@ -314,6 +316,15 @@ code {
   flex-shrink: 0;
   background: var(--dot, var(--muted));
 }
+/* 侧边栏分类专属图标 */
+.side-ico {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: var(--dot, var(--muted));
+}
+.side-ico svg { width: 18px; height: 18px; display: block; }
 .side-count {
   margin-left: auto;
   font-size: var(--fs-xs);

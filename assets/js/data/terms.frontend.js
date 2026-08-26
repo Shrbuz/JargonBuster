@@ -2906,6 +2906,748 @@
       '百分比和 vw 都是相对宽度？% 相对父元素，vw 相对视口，页面有滚动条或父级留白时两者明显不同。'
     ],
     related: ['responsive-design', 'css-box-model', 'typography']
+  },
+
+  {
+    id: 'css-inheritance',
+    en: 'CSS Inheritance',
+    zh: 'CSS 继承',
+    aliases: ['继承', 'inheritance', 'inherit'],
+    cat: 'frontend',
+    tags: ['CSS', '布局'],
+    level: 'core',
+    summary: '有些样式（color、font）会传给子元素叫继承；盒模型、定位这类不继承，需要自己写。',
+    plain: [
+      'CSS 里一部分属性会「往下传」：父元素设了 color，子元素没设就自动用父的。font、color、line-height、text-align 都继承；而 margin、padding、border、width、height、position 不继承，每个元素都从初始值开始。',
+      '这个规则决定了布局陷阱：给 body 设了字号，p 和 button 的字号默认跟随，但 input、button、select 这类表单控件很多浏览器默认不继承字体，需要显式 font: inherit。',
+      '跟 AI 说「这个按钮字号没跟父级走，请加 font: inherit」它秒懂；只说「字号不对」它得先排查是不是继承断了。'
+    ],
+    analogy: '继承像家规：家里的语言（color、字体）默认下一代都跟着说，但身高体重（盒模型、定位）各人各的，不会继承。',
+    talk: {
+      good: [
+        '表单控件的字号和父级不一致，请给 input 加 font: inherit。',
+        '这段文本希望继承父级的颜色，请去掉它的显式 color。'
+      ],
+      bad: [
+        { say: '字体颜色怎么有的变有的不变', why: '没说是继承问题还是选择器覆盖问题，AI 需要先猜排查方向。' }
+      ]
+    },
+    misconceptions: [
+      '所有 CSS 属性都能继承？只有部分（文本类为主）能，盒模型类不继承。',
+      '子元素设置了就覆盖父级？是，显式设置优先于继承值，这就是优先级的第一层。'
+    ],
+    related: ['css-cascade', 'css-specificity', 'typography']
+  },
+
+  {
+    id: 'css-specificity',
+    en: 'CSS Specificity',
+    zh: 'CSS 优先级',
+    aliases: ['优先级', '权重', 'specificity', '权重计算'],
+    cat: 'frontend',
+    tags: ['CSS', '选择器'],
+    level: 'advanced',
+    summary: '两个规则都命中时，按「权重」决胜负：id > 类/属性/伪类 > 元素/伪元素，!important 最大。',
+    plain: [
+      '当多条规则同时命中同一个元素、属性冲突时，浏览器按选择器的「权重」决定谁赢。权重从高到低：行内样式、id 选择器、类/属性/伪类、元素/伪元素。同权重比谁出现得晚（后面的赢）。',
+      '这是「改了不生效」的头号原因：你的类选择器打不过别人的更高权重。规范做法是保持权重低平、用类选择器，而不是靠 !important 或越写越长的选择器堆权重。!important 会打乱规则，能不用就不用。',
+      '跟 AI 说「这个样式没生效，请检查是不是被更高优先级的选择器覆盖了」，比说「帮我改一下样式」高效得多——它直接去查权重而不是瞎试。'
+    ],
+    analogy: '优先级像法庭的裁决顺序：id 是最高法院判决，类是地方法院，元素是街道调解——判决冲突时高层说了算；同层级就看哪份文件后签发（后面的赢）。',
+    visual: { kind: 'anim', id: 'css-specificity', caption: '三个选择器按权重比拼，最高者胜出' },
+    talk: {
+      good: [
+        '这个类选择器的样式被 .nav .item 覆盖了，请检查优先级，尽量用同层级覆盖。',
+        '请避免用 !important，用更高权重的类选择器解决冲突。'
+      ],
+      bad: [
+        { say: '我改了样式怎么没变化', why: '多半是优先级问题；没说具体选择器和冲突来源，AI 只能帮你猜。' }
+      ]
+    },
+    misconceptions: [
+      '后面写的规则一定赢？只有同权重才按先后，权重更高的不管写在哪都赢。',
+      '!important 是终极解决？它能赢但会连锁失控，项目里越用越乱。'
+    ],
+    related: ['css-cascade', 'css-inheritance', 'css-naming-methodology']
+  },
+
+  {
+    id: 'css-pseudo-class',
+    en: 'CSS Pseudo Classes & Elements',
+    zh: '伪类与伪元素',
+    aliases: ['伪类', '伪元素', 'hover', 'before', 'pseudo'],
+    cat: 'frontend',
+    tags: ['CSS', '选择器'],
+    level: 'common',
+    summary: '伪类描述状态（:hover、:focus），伪元素造出不存在的部分（::before、::after），都靠选择器触发。',
+    plain: [
+      '伪类（:hover、:focus、:disabled、:nth-child）选中元素的某种「状态」或「位置」；伪元素（::before、::after、::placeholder）造出 DOM 里不存在的「虚拟部分」，常用来加图标、装饰、占位文字。',
+      '两者用单冒号还是双冒号区分：CSS3 规范伪元素用双冒号（::before），伪类用单冒号（:hover）。伪元素的内容要写在 content 属性里，否则不显示。',
+      '跟 AI 说「给按钮加 hover 和 focus 状态样式」「用 ::after 加个箭头图标」，它能精准实现；只说「加点交互效果」它可能用 JS 做本该 CSS 做的事。'
+    ],
+    analogy: '伪类像根据「天气状态」决定穿什么（晴天/下雨/夜晚都是一种状态）；伪元素像往房间里摆装饰摆件（不是原本家具的一部分，是额外加上去的）。',
+    talk: {
+      good: [
+        '给输入框加 :focus 时的边框高亮，和 :hover 状态。',
+        '用 ::before 加个圆点装饰，记得设 content: 空字符串。'
+      ],
+      bad: [
+        { say: '鼠标放上去要有点变化', why: '没说 hover 还是 focus、变什么，AI 只能猜，可能做错状态或做在 JS 里。' }
+      ]
+    },
+    misconceptions: [
+      '::before 不需要 content？必须有 content，否则不渲染。',
+      ':focus 和 :active 一样？focus 是键盘/点击聚焦后持续，active 是按下瞬间。'
+    ],
+    related: ['interactive-states', 'css-specificity', 'primary-color']
+  },
+
+  {
+    id: 'css-animation-keyframes',
+    en: 'CSS Animations & Keyframes',
+    zh: 'CSS 动画与关键帧',
+    aliases: ['动画', 'keyframes', 'animation'],
+    cat: 'frontend',
+    tags: ['CSS', '动画'],
+    level: 'common',
+    summary: '@keyframes 定义从哪到哪的关键帧，animation 属性控制时长、次数、曲线，全程 GPU 友好。',
+    plain: [
+      'CSS 动画分两步：@keyframes 声明动画的阶段（from/0% 到 to/100% 的样式），再用 animation 属性挂到元素上（时长、延迟、次数、缓动、是否循环）。',
+      '和 transition 的区别：transition 是「状态变化时补间」，需要触发（hover、class 切换）；animation 是「独立播放的动画」，自带关键帧和循环，不依赖触发。做复杂连续动作、循环动画用 animation。',
+      '性能上优先动画 transform 和 opacity，避免动画 margin、top、width——它们触发重排重绘更卡。跟 AI 说「用 keyframes 做呼吸灯，循环 2 秒，只动 opacity」它给的就是性能友好的实现。'
+    ],
+    analogy: 'keyframes 像动画师画的几张关键帧（起点和终点），浏览器负责自动补出中间的帧；transition 则像「灯一开就慢慢变亮」——依赖开关动作，而 animation 是「循环播放的片头动画」。',
+    talk: {
+      good: [
+        '做个 2 秒循环的呼吸灯，用 keyframes 只动画 opacity。',
+        '入场动画用 animation，设置 ease-out 和一次播放。'
+      ],
+      bad: [
+        { say: '加个动画让它动起来', why: '没说动画内容、触发方式、时长，AI 可能用错 animation/transition 或动画了昂贵属性。' }
+      ]
+    },
+    misconceptions: [
+      '动画 width 没事？会触发布局，卡顿；transform 缩放更流畅。',
+      'animation 需要触发才播放？默认元素渲染就播，想受控得配合 class 切换或暂停。'
+    ],
+    related: ['css-transition', 'transition-animation', 'css-transform']
+  },
+
+  {
+    id: 'css-transition',
+    en: 'CSS Transitions',
+    zh: 'CSS 过渡',
+    aliases: ['过渡', 'transition', '补间'],
+    cat: 'frontend',
+    tags: ['CSS', '动画'],
+    level: 'common',
+    summary: '属性值变化时平滑过渡：hover 改颜色、宽度，加 transition 就从突变变渐变。',
+    plain: [
+      'transition 让元素的样式变化不是「啪」地突变，而是在一段时间内平滑过渡：transition: property 时长 缓动函数。最常见用法是配 hover/focus/class 切换，让颜色、位移、透明度柔和变化。',
+      '要点：只过渡你想要的属性（transition: background 0.2s 只过渡背景）；给 transition-property 设 all 会什么都慢半拍；过渡需要「前后两个值都可插值」，display:none 到 block 无法过渡。',
+      '和动画的区别：transition 靠状态变化触发、一次性；animation 自带关键帧、可循环。跟 AI 说「hover 时平滑变颜色，加 0.2s 过渡」它就加对了；说「做个渐变效果」它可能误解成颜色渐变（gradient）。'
+    ],
+    analogy: 'transition 像电梯：按按钮（状态变化）不是瞬移，而是平滑上升；animation 则像自动扶梯：一直在动，不用按钮。',
+    talk: {
+      good: [
+        'hover 时背景色平滑变化，加 transition: background-color 0.2s ease。',
+        '这个收起展开用 max-height 过渡，注意只过渡这一个属性。'
+      ],
+      bad: [
+        { say: '样式变化太突兀了', why: '没说想过渡哪些属性、时长，AI 可能给 all 过渡导致处处慢半拍。' }
+      ]
+    },
+    misconceptions: [
+      'transition: all 最省事？会让所有属性变化都延迟，包括不想要的，性能也差。',
+      'display 变化也能过渡？display 不可插值，要配合 opacity/visibility 或 max-height 技巧。'
+    ],
+    related: [
+      'css-animation-keyframes',
+      'transition-animation',
+      'interactive-states'
+    ]
+  },
+
+  {
+    id: 'css-transform',
+    en: 'CSS Transforms',
+    zh: 'CSS 变换',
+    aliases: ['transform', '平移', '旋转', '缩放'],
+    cat: 'frontend',
+    tags: ['CSS', '布局'],
+    level: 'common',
+    summary: 'transform 平移/旋转/缩放元素而不影响文档流：GPU 加速，动画首选它而不是 top/left。',
+    plain: [
+      'transform 在不改变布局的前提下对元素做视觉变换：translate（平移）、rotate（旋转）、scale（缩放）、skew（倾斜），可组合（transform: translate(...) scale(...)）。',
+      '关键特性：transform 不触发重排、只触发合成，动画性能极好（GPU 加速），所以「元素移动」规范做法是改 transform: translate 而不是改 top/left。配合 transition 就是流畅的位移动画。',
+      '注意 transform 会创建新的层叠上下文，且对 inline 元素无效（要 display: inline-block 等）。跟 AI 说「用 transform 实现位移动画而不是 margin/top」，它写的就是高性能方案。'
+    ],
+    analogy: 'transform 像把一张照片在相册里移动、旋转、放大：照片本身没变（不影响其他照片位置），只是观看时的呈现方式变了。',
+    talk: {
+      good: [
+        '这个元素要平滑左移，用 transform: translateX，别改 left。',
+        'hover 时放大 1.1 倍，用 transform: scale(1.1) 加过渡。'
+      ],
+      bad: [
+        { say: '让它动起来', why: '没说是位移还是缩放旋转、用 CSS 还是 JS，AI 可能用 top/left 造成卡顿。' }
+      ]
+    },
+    misconceptions: [
+      'transform 会移动元素在文档流里的位置？不会，它只改视觉呈现，占据的空间不变。',
+      '改 top/left 做动画和 transform 一样？top/left 触发重排，transform 只触发合成，流畅度差很多。'
+    ],
+    related: ['css-animation-keyframes', 'css-transition', 'stacking-context']
+  },
+
+  {
+    id: 'stacking-context',
+    en: 'Stacking Context',
+    zh: '层叠上下文',
+    aliases: ['层叠上下文', 'z-index 失效', 'stacking context'],
+    cat: 'frontend',
+    tags: ['CSS', '层叠'],
+    level: 'advanced',
+    summary: 'z-index 只在同一层叠上下文里比大小；父元素一设 opacity/transform/z-index，子元素的 z-index 就被关进小黑屋。',
+    plain: [
+      '层叠上下文是一个「局部层叠战场」：普通元素、position+z-index、opacity<1、transform、filter 都会创建它。一旦元素创建了上下文，它内部的 z-index 只能在内部比，对外整体作为一个层参与外部排序。',
+      '这就是「z-index 设了 9999 还是被盖住」的真相：你的元素被关进了父元素的上下文，父元素的层级低，里面再大也出不来。排查时先看元素往上哪层创建了上下文。',
+      '跟 AI 说「弹层被盖住了，请检查是不是父级创建了层叠上下文」，比「z-index 调大点」专业得多——调大 z-index 治标不治本。'
+    ],
+    analogy: '层叠上下文像学校里的班级排名和全校排名：你在班里（上下文）排第一，但全班对外只算一个集体名次；隔壁班整体排你班前面，你个人再强也越不过班这个整体。',
+    visual: { kind: 'anim', id: 'stacking-context', caption: '子元素 z 再高也跳不出父容器' },
+    talk: {
+      good: [
+        '这个弹层的 z-index 9999 还是被盖住，请排查父级是否因 opacity/transform 创建了层叠上下文。',
+        '给这个模块设置 position: relative 加 z-index 建立独立上下文，避免内部元素干扰全局层叠。'
+      ],
+      bad: [
+        { say: 'z-index 加很大还是盖不住', why: '这是层叠上下文问题不是 z-index 数值问题；不点破 AI 会继续调 z-index 白费功夫。' }
+      ]
+    },
+    misconceptions: [
+      'z-index 越大越靠上？只在同一层叠上下文内成立，父级层一低全白搭。',
+      '只有 z-index 能创建层叠上下文？opacity、transform、filter、will-change 都能创建。'
+    ],
+    related: ['z-index', 'css-transform', 'modal', 'position']
+  },
+
+  {
+    id: 'html-semantic',
+    en: 'Semantic HTML',
+    zh: '语义化标签',
+    aliases: ['语义化', '语义标签', 'header', 'main', 'section'],
+    cat: 'frontend',
+    tags: ['HTML', '可访问性'],
+    level: 'common',
+    summary: '用 header/main/article 等有含义的标签而不是全是 div：可读、好维护、对 SEO 和读屏友好。',
+    plain: [
+      '语义化是用「有意义」的标签描述内容结构：header（页头）、nav（导航）、main（主体）、article（独立内容）、section（分区）、footer（页脚）、h1-h6（标题层级）。全用 div 也能实现布局，但结构和含义丢了。',
+      '好处三条：代码可读性高（看标签就知道区块作用）；SEO 更好（搜索引擎理解内容层次）；无障碍更好（读屏软件靠语义导航，标题层级对了盲人才能跳转）。',
+      '跟 AI 说「用语义化标签重构这段页面结构，main 里放主体、section 分节」，它给的结构化输出比一堆 div 强得多；说「做个页面」它默认可能就是 div 堆。'
+    ],
+    analogy: '语义化标签像文件柜上贴标签：div 是不带标签的抽屉，每个都要打开才知道里面是什么；header/article 是贴着「合同」「发票」标签的抽屉，一看就懂。',
+    talk: {
+      good: [
+        '用语义化标签组织页面：header、nav、main、footer，标题层级从 h1 开始。',
+        '这段列表用 ul/li 而不是 div 堆，保持语义。'
+      ],
+      bad: [
+        { say: '帮我写个页面结构', why: '没说语义化要求，AI 可能产出 div 海洋，SEO 和可读性都差。' }
+      ]
+    },
+    misconceptions: [
+      'div 能实现一切，不需要语义标签？能实现但失去结构含义，SEO 和可访问性受损。',
+      'section 和 div 一样？section 是有主题的分区，通常带标题；div 是无语义容器。'
+    ],
+    related: ['accessibility-basics', 'seo', 'navbar']
+  },
+
+  {
+    id: 'accessibility-basics',
+    en: 'Web Accessibility (a11y)',
+    zh: '无障碍基础',
+    aliases: ['a11y', '无障碍', '可访问性', 'ARIA'],
+    cat: 'frontend',
+    tags: ['可访问性', '工程'],
+    level: 'advanced',
+    summary: '让网站能被读屏、键盘、弱视用户使用：alt、标签、对比度、焦点管理是四项基本功。',
+    plain: [
+      '无障碍（a11y）是让网页对所有人可用：盲人用读屏软件听网页、键盘用户不用鼠标、弱视用户需要高对比度。基本功：图片加 alt 描述；表单控件有 label；文字和背景对比度达标（正文 4.5:1）；键盘能 Tab 走通所有交互。',
+      '常见坑：用 div 做按钮但没加 role 和键盘事件；弹层打开后焦点没移进去、关闭后没还回去；装饰性图标没加 aria-hidden 让读屏跳过。ARIA 是补充语义，但不能替代原生标签（原生 button 免费自带无障碍）。',
+      '跟 AI 说「这个自定义下拉要支持键盘操作和 aria-expanded」，它知道补无障碍；说「做个下拉」它可能只做鼠标交互，键盘用户用不了。'
+    ],
+    analogy: '无障碍像给大楼加坡道、电梯按钮盲文、门把手下压式：多数人用不上，但对需要的人它就是「能不能进门」的区别——网页也是同一栋楼。',
+    talk: {
+      good: [
+        '这个图片加 alt 描述，纯装饰图用 aria-hidden 隐藏。',
+        '自定义按钮请用原生 button 标签，自带键盘和读屏支持。'
+      ],
+      bad: [
+        { say: '帮我做个按钮', why: '没说无障碍要求，AI 可能用 div+点击事件，键盘和读屏用户都用不了。' }
+      ]
+    },
+    misconceptions: [
+      '无障碍是给少数人的额外工作？它同时提升所有人体验（大字体、清晰焦点），且是合规要求。',
+      'ARIA 加上就万事大吉？ARIA 写错比没有更糟，优先用原生语义。'
+    ],
+    related: ['html-semantic', 'form', 'modal']
+  },
+
+  {
+    id: 'viewport-meta',
+    en: 'Viewport & Mobile Adaptation',
+    zh: '视口与移动端适配',
+    aliases: ['viewport', '视口', 'meta viewport', '移动适配'],
+    cat: 'frontend',
+    tags: ['响应式', '移动端'],
+    level: 'common',
+    summary: '<meta viewport> 告诉手机按真实屏幕宽度渲染而不是 980px 虚拟宽度，是移动端不缩放的前提。',
+    plain: [
+      '手机浏览器默认用约 980px 的虚拟视口渲染桌面页面，再整体缩小，导致字小得像蚂蚁。加 <meta name="viewport" content="width=device-width, initial-scale=1"> 后，页面按设备真实宽度渲染，CSS 里的 px 才和物理感受对上。',
+      '它是所有响应式适配的前提：没有它，媒体查询里的断点全按 980 算，布局全乱。配合 rem、vw 或 clamp 做自适应字号，配合 1px 物理像素处理细边框。',
+      '跟 AI 说「页面上手机字太小/布局横向滚动，先检查有没有加 viewport meta」，它立刻定位；只说「手机显示不对」它可能改半天布局才发现根因是 viewport。'
+    ],
+    analogy: 'viewport 像告诉打印机「纸的实际尺寸」：不说它默认按大纸排版再缩印，字全挤小；说了它按真实纸张排，一毫米就是一毫米。',
+    talk: {
+      good: [
+        '移动端显示异常，请确认 head 里已加 viewport meta 且 width=device-width。',
+        '用 rem 做自适应，根字号按视口宽度用 clamp 设置。'
+      ],
+      bad: [
+        { say: '手机上样式全乱了', why: '很可能没加 viewport；不点破 AI 可能盲目调 CSS 而治标不治本。' }
+      ]
+    },
+    misconceptions: [
+      '不加 viewport 也能做移动适配？媒体查询会按错误的 980px 宽度工作，等于没适配。',
+      'viewport 只影响手机？平板、横屏、桌面缩放都受它影响。'
+    ],
+    related: ['responsive-design', 'css-units', 'css-inheritance']
+  },
+
+  {
+    id: 'margin-collapse',
+    en: 'Margin Collapse',
+    zh: '外边距塌陷',
+    aliases: ['外边距塌陷', 'margin collapse', 'margin 合并'],
+    cat: 'frontend',
+    tags: ['CSS', '盒模型'],
+    level: 'advanced',
+    summary: '垂直方向的相邻 margin 会合并取最大值而不是相加：上下间距经常「少了一半」就是它。',
+    plain: [
+      '外边距塌陷（margin collapse）：垂直方向上两个相邻元素（或父子）的 margin 不叠加，而是取较大那个。比如 A 的 margin-bottom: 30px、B 的 margin-top: 20px，间距是 30 不是 50。',
+      '水平方向不塌陷；还有父子塌陷：子元素的 margin-top 会「透出」父元素，把父元素整体顶下去（前提父元素没有 padding/border/overflow 等隔离）。',
+      '规避三板斧：父元素加 padding、border、overflow: hidden，或改用 flex/grid 布局（不会塌陷）。跟 AI 说「这段间距看起来不对，检查是不是 margin 塌陷」，它就往这个方向排查了。'
+    ],
+    analogy: '外边距塌陷像两人排队间距：你和前面的人各想保持 1 米和 2 米距离，结果只按 2 米算（取较大），不会变 3 米——距离是「谁要求的多就按谁」，不是相加。',
+    visual: { kind: 'anim', id: 'margin-collapse', caption: '相邻 margin 相遇后合并取较大值' },
+    talk: {
+      good: [
+        '两个块之间的垂直间距没达到预期，请检查 margin 塌陷并给出解决方案。',
+        '给父元素加 overflow: hidden 隔离子元素的 margin 穿透。'
+      ],
+      bad: [
+        { say: '间距怎么少了', why: '没说是不是垂直相邻块或父子，AI 可能直接调 margin 数值，越调越乱。' }
+      ]
+    },
+    misconceptions: [
+      'margin 永远相加？只有水平方向相加，垂直方向合并取最大。',
+      '只有兄弟元素会塌陷？父子元素的 margin-top 也会穿透合并。'
+    ],
+    related: ['css-box-model', 'css-inheritance', 'flex-grid']
+  },
+
+  {
+    id: 'css-float-clear',
+    en: 'Float & Clear',
+    zh: '浮动与清除',
+    aliases: ['浮动', 'float', 'clear', '清除浮动'],
+    cat: 'frontend',
+    tags: ['CSS', '布局'],
+    level: 'common',
+    summary: 'float 让元素靠左/靠右并让文字环绕，脱离文档流；清除浮动是古老但必须会的收尾手段。',
+    plain: [
+      'float: left/right 让元素向左/右靠，后续文字环绕它排，最初用于图文混排（报纸排版）。浮动元素脱离普通文档流，导致父容器高度塌陷——这就是为什么要「清除浮动」。',
+      '清除浮动（clearfix）的办法：父容器用 ::after { content: \'\'; display: block; clear: both }，或父容器 overflow: hidden，或直接改 flex/grid。现代布局用 flex/grid 后 float 基本只剩图文混排场景。',
+      '跟 AI 说「这个父容器因为子元素 float 塌了，请用 clearfix」，它给你标准解法；说「布局乱了」它可能绕半天。排查 float 问题先确认是不是忘了清除浮动。'
+    ],
+    analogy: '浮动像报纸里插图靠边、文字绕它排版；清除浮动则像插图排版完后「声明到此为止」，否则后面的文字还傻乎乎地往上绕。',
+    talk: {
+      good: [
+        '图片左浮动、文字环绕，父容器记得用 clearfix 防止高度塌陷。',
+        '这个布局用 flex 实现而不是 float，float 留给图文混排。'
+      ],
+      bad: [
+        { say: '父容器高度怎么没了', why: '十有八九是浮动未清除；不点破 AI 可能到处加高度 hack。' }
+      ]
+    },
+    misconceptions: [
+      'float 布局是主流？早被 flex/grid 取代，现在只适合图文环绕。',
+      '给父元素 overflow: hidden 能解决一切？是常见 hack，但也会裁掉溢出内容，要注意场景。'
+    ],
+    related: ['flex-grid', 'css-box-model', 'css-pseudo-class']
+  },
+
+  {
+    id: 'image-formats',
+    en: 'Image Formats & Compression',
+    zh: '图片格式与压缩',
+    aliases: ['图片格式', 'webp', 'avif', 'svg', 'png'],
+    cat: 'frontend',
+    tags: ['性能', '图片'],
+    level: 'common',
+    summary: '照片用 WebP/AVIF、图标用 SVG、截图用 PNG：同一张图格式不同，体积能差好几倍。',
+    plain: [
+      '选对图片格式直接决定体积：照片（渐变、复杂场景）用 JPEG/WebP/AVIF，WebP 比 JPEG 小 25-30%，AVIF 更小；图标、Logo、矢量图用 SVG（无限缩放、体积小）；需要透明又复杂的用 PNG；动图用 WebP 动图或视频替代 GIF。',
+      '工程规范：上传图片转 WebP/AVIF 并压缩；图标尽量用 SVG 或图标字体而不是 png；懒加载大图；给 img 设 width/height 防止布局偏移（CLS）。',
+      '跟 AI 说「这些图标用 SVG、照片用 WebP，并提供 picture 多格式回退」，它给的方案体积小体验好；说「帮我放张图」它可能直接放张原图 PNG 拖慢页面。'
+    ],
+    analogy: '图片格式像搬家打包：照片用真空压缩袋（WebP/AVIF），小摆件用原箱（PNG），组装家具拆成板材图纸（SVG 矢量）——选对方式，同样东西占的箱子差好几倍。',
+    talk: {
+      good: [
+        '列表图片统一用 WebP 并给不同尺寸 srcset，控制体积。',
+        '这个 Logo 用 SVG 而不是 PNG，保持清晰且体积小。'
+      ],
+      bad: [
+        { say: '页面图片太多加载慢', why: '没说图片类型和体积瓶颈，AI 只能泛泛建议，未必对症。' }
+      ]
+    },
+    misconceptions: [
+      'PNG 适合所有图？照片用 PNG 体积巨大，应选 JPEG/WebP/AVIF。',
+      'SVG 能当照片格式？SVG 是矢量，适合图标和简单图形，复杂照片反而巨大。'
+    ],
+    related: ['lazy-loading', 'performance-core-web-vitals', 'placeholder-text']
+  },
+
+  {
+    id: 'performance-core-web-vitals',
+    en: 'Core Web Vitals',
+    zh: '核心性能指标',
+    aliases: ['LCP', 'CLS', 'INP', 'FID', '性能指标'],
+    cat: 'frontend',
+    tags: ['性能', '工程'],
+    level: 'advanced',
+    summary: 'LCP 看加载多快、CLS 看布局稳不稳、INP 看交互响不响应：三个指标代表用户真实体验。',
+    plain: [
+      'Core Web Vitals 是谷歌定的三个「真实体验」指标：LCP（最大内容绘制）衡量首屏主要内容的加载速度，目标 <2.5s；CLS（累积布局偏移）衡量页面元素是否乱跳，目标 <0.1；INP（交互到下一帧）衡量点按的响应速度，目标 <200ms。',
+      '对应优化：LCP 慢→压缩关键资源、预加载主图、优化服务端返回；CLS 大→给图片视频固定宽高、避免无尺寸内容插入、动画留位；INP 差→长任务拆分、减少主线程阻塞。',
+      '跟 AI 说「我的 CLS 得分低，图片加载时布局乱跳，请给 img 加宽高占位」，它直击痛点；只说「帮我优化性能」范围太宽，它只能泛泛给建议。'
+    ],
+    analogy: '性能指标像餐厅体验三问：上菜快不快（LCP）、端菜时汤洒没洒（CLS）、叫服务员响应快不快（INP）——三个都顾好才是好体验，只看一个会漏。',
+    talk: {
+      good: [
+        'LCP 超标，首屏主图请预加载并压缩，去掉阻塞渲染的脚本。',
+        'CLS 偏高，请给所有 img 和 iframe 设置明确宽高。'
+      ],
+      bad: [
+        { say: '帮我优化网站速度', why: '没指明是 LCP/CLS/INP 哪项、具体页面，AI 只能给通用清单。' }
+      ]
+    },
+    misconceptions: [
+      '性能只看加载速度？CLS 和 INP 同样影响体验和排名，且三者常顾此失彼。',
+      '首屏越快 CLS 一定越好？加载快但内容没占位，图片一进来照样乱跳。'
+    ],
+    related: ['lazy-loading', 'reflow-repaint', 'image-formats', 'seo']
+  },
+
+  {
+    id: 'component-props',
+    en: 'Props & Component Communication',
+    zh: 'Props 与组件通信',
+    aliases: ['props', '组件传参', '父子通信', 'props 钻取'],
+    cat: 'frontend',
+    tags: ['组件', '框架'],
+    level: 'common',
+    summary: '父组件通过 props 向子组件传数据，数据单向流动；层级太深时 props 钻取就该用状态管理或 context。',
+    plain: [
+      '在组件化框架（React/Vue）里，props 是父组件传给子组件的「入参」：父决定传什么、子负责展示和使用。数据流单向：子不能直接改 props，想改要回调父组件。这是组件复用的基础。',
+      '层级一深就出现 props 钻取（prop drilling）：爷爷传给爸爸、爸爸传给儿子，中间层只是转发。解法：用 context / 状态管理（Redux/Pinia）或组合模式，别硬钻。',
+      '跟 AI 说「这个组件不要直接改 props，请通过回调通知父组件更新」或「props 钻取太深，改用 context」，它能给出符合框架惯例的写法；说「帮我传个数据」它可能写出直接改 props 的反模式。'
+    ],
+    analogy: 'props 像点外卖的订单：父组件下单（传 props），子组件按单出餐展示；子组件想换菜不能改订单，只能打电话回去（回调）让父重新下单。',
+    talk: {
+      good: [
+        '这个子组件想修改 props 的值，请改为调用父组件传入的回调函数。',
+        'props 传递超过三层，请改用 context 或状态管理避免钻取。'
+      ],
+      bad: [
+        { say: '子组件改了数据父组件没更新', why: '正是「不该直接改 props」的典型；不点破 AI 可能在子组件里乱改 state 更乱。' }
+      ]
+    },
+    misconceptions: [
+      '子组件能随意改 props？不能，会破坏单向数据流，导致状态混乱。',
+      'props 钻取无害？层级深时难维护难排查，是重构信号。'
+    ],
+    related: ['component', 'state', 'one-way-data-flow', 'state-management']
+  },
+
+  {
+    id: 'form-validation',
+    en: 'Form Validation & Feedback',
+    zh: '表单校验与反馈',
+    aliases: ['表单校验', '校验', 'validation', '必填'],
+    cat: 'frontend',
+    tags: ['表单', '交互'],
+    level: 'common',
+    summary: '校验分前端即时校验和后端最终校验：给用户即时报错、标清错误字段，但不能只靠前端防数据。',
+    plain: [
+      '表单校验包括：必填、格式（邮箱、手机号、正则）、长度、数值范围。前端校验在用户输入/失焦/提交时即时反馈，体验好；但前端校验可绕过，真正的数据校验必须在后端再做一遍。',
+      '好的反馈：错误信息紧挨着字段、说明清楚「哪里错、怎么改」、红色不要只靠颜色（色弱用户）、提交失败保留用户已填内容。校验时机：失焦校验（blur）+ 提交时全量校验是常见组合。',
+      '跟 AI 说「邮箱格式校验，失焦时提示错误，错误信息显示在字段下方」，它给的实现体验好；说「加个校验」它可能只在提交时弹一个笼统提示，用户不知道哪里错。'
+    ],
+    analogy: '表单校验像机场安检：前端是登机口的值机提示（没带证件当场提醒你），后端是海关最终核查（伪造提示也过不去）——前端图方便，后端保安全，两道都要。',
+    talk: {
+      good: ['邮箱字段失焦时校验格式，错误信息显示在输入框下方并标红边框。', '提交时全量校验，失败要保留已填内容并滚动到第一个错误字段。'],
+      bad: [
+        { say: '帮表单加个校验', why: '没说校验规则、触发时机、错误展示方式，AI 只能做个最简版，体验粗糙。' }
+      ]
+    },
+    misconceptions: ['前端校验够了？可被绕过，后端必须再校验，否则是安全漏洞。', '报错用红色就行？色弱用户看不清，要配合文字和图标。'],
+    related: ['form', 'text-input', 'error-state']
+  },
+
+  {
+    id: 'css-naming-methodology',
+    en: 'CSS Naming Methodology (BEM)',
+    zh: 'CSS 命名方法论',
+    aliases: ['BEM', 'CSS 命名', 'OOCSS', '命名规范'],
+    cat: 'frontend',
+    tags: ['CSS', '工程'],
+    level: 'advanced',
+    summary: 'BEM 用 块__元素--修饰 三层命名，把样式作用域锁死：class 一看就知道属于谁，不怕全局污染。',
+    plain: [
+      'BEM 是最流行的 CSS 命名法：块（block）是独立组件，元素（element）用 __ 连接（card__title），修饰（modifier）用 -- 连接（button--primary）。好处：名字自带层级信息、作用域清晰、基本不冲突。',
+      '它解决的是「全局 CSS 互相污染」：没有命名约束时，.title 这种通用名随时被别处覆盖。BEM 让选择器唯一的代价是 class 名长，但换来可维护性。现代也有 CSS Modules、Tailwind 等替代方案。',
+      '跟 AI 说「按 BEM 命名：组件是 card，标题是 card__title，强调态是 card__title--highlight」，它产出的样式结构清晰；不说它可能给你写一堆全局通用类名。'
+    ],
+    analogy: 'BEM 像快递单号编码：省份-城市-街道 每一段都有明确归属，不会搞混；没规则的名字就像只说「三楼」，全楼都有一堆「三楼」。',
+    talk: {
+      good: [
+        '这个组件按 BEM 命名，主类 .card，子元素 .card__title，状态 .card__title--active。',
+        '请避免全局类名，用 BEM 或 CSS Modules 隔离样式。'
+      ],
+      bad: [
+        { say: '样式总是互相覆盖', why: '多半是全局命名冲突；不点破 BEM/作用域，AI 只能不断加权重和 !important。' }
+      ]
+    },
+    misconceptions: [
+      'BEM 已经过时？它仍是清晰可靠的方案，Tailwind/CSS Modules 只是不同取舍。',
+      '命名规范限制创意？它限制的是混乱，不是设计能力。'
+    ],
+    related: ['css-specificity', 'css-cascade', 'component']
+  },
+
+  {
+    id: 'pwa-offline',
+    en: 'PWA & Offline Capability',
+    zh: 'PWA 与离线能力',
+    aliases: ['PWA', '离线', 'Service Worker', 'manifest'],
+    cat: 'frontend',
+    tags: ['工程', '离线'],
+    level: 'advanced',
+    summary: 'PWA 用 Service Worker 缓存资源、manifest 支持添加到主屏：网站能像 App 一样离线可用。',
+    plain: [
+      'PWA（渐进式 Web 应用）让网页具备 App 感：Service Worker（一个独立于页面的 JS）拦截网络请求、缓存资源，断网时也能打开页面；manifest 配置图标和名称，支持「添加到主屏幕」；再配合推送、安装提示。',
+      '缓存策略很关键：页面骨架用「缓存优先（离线可开）」，API 数据用「网络优先、失败回退缓存（数据要新）」，版本更新要清理旧缓存避免「改了半天用户还是旧版」。',
+      '常见坑：Service Worker 注册了但更新策略不对，用户一直用旧资源。跟 AI 说「加 Service Worker，页面缓存优先、接口网络优先」，它能给标准模板；说「做个离线版」它可能把接口也缓存了导致数据过期。'
+    ],
+    analogy: 'PWA 像给网站装了「离线背包」：Service Worker 是把常用物资（页面骨架、图片）提前装进背包，断网时从背包取；接口数据则是到了现场（联网）再实时问。',
+    talk: {
+      good: [
+        '配置 Service Worker：静态资源缓存优先，API 请求网络优先失败再回退缓存。',
+        '版本更新时请清理旧缓存，避免用户加载到过期资源。'
+      ],
+      bad: [
+        { say: '帮我做个能离线打开的页面', why: '没说哪些资源离线、接口怎么办，AI 可能全缓存导致数据不更新。' }
+      ]
+    },
+    misconceptions: [
+      'PWA 就是能加个图标？核心是离线能力和可靠加载，图标只是表面。',
+      'Service Worker 缓存了就不管更新？必须设计版本和清理策略，否则改代码不生效。'
+    ],
+    related: ['caching', 'web-storage', 'lazy-loading']
+  },
+
+  {
+    id: 'font-loading',
+    en: 'Font Loading & FOIT/FOUT',
+    zh: '字体加载策略',
+    aliases: ['字体加载', 'FOIT', 'FOUT', 'font-display', 'web font'],
+    cat: 'frontend',
+    tags: ['性能', '字体'],
+    level: 'advanced',
+    summary: '网页字体没加载完时文字要么隐形（FOIT）要么闪变（FOUT）：用 font-display: swap 和字体子集来缓解。',
+    plain: [
+      '用自定义网页字体（web font）时，浏览器要下载字体文件才能渲染成目标字体。加载期间两种现象：FOIT（文字隐形，等字体到才显示）和 FOUT（先用备用字体显示，字体到了再切换，导致文字「闪变」）。',
+      'CSS 的 font-display 控制策略：swap 让文字先显示备用字体（可读优先，代价是可能闪变）；optional/fallback 权衡等待时间。配套优化：字体子集化（只打包用到的字符）、woff2 压缩、preload 关键字体。',
+      '跟 AI 说「中文字体太大，请子集化并按需加载，font-display 用 swap」，它给的方案兼顾速度和可读；说「加个字体」它可能整包引入，首屏瞬间多几百 KB。'
+    ],
+    analogy: '字体加载像餐厅点菜：FOIT 是服务员说「等菜做好才能动筷」（饿着等）；FOUT 是「先上普通餐具用着，主菜来了再换」（先用着，换的时候手忙脚乱）——swap 策略就是先上普通餐具。',
+    talk: {
+      good: ['自定义字体加 font-display: swap，避免文字隐形等待。', '中文字体请子集化加载，只包含页面用到的字符。'],
+      bad: [
+        { say: '首屏文字不显示/闪一下', why: '这是字体加载策略问题；不点破 FOIT/FOUT，AI 可能查半天别的原因。' }
+      ]
+    },
+    misconceptions: [
+      '字体加载不影响性能？整包中文字体可能 1-2MB，对首屏是巨大负担。',
+      'FOUT 能完全避免？swap 只是优先可读，闪变仍可能；用 optional 才更保守。'
+    ],
+    related: ['performance-core-web-vitals', 'image-formats', 'typography']
+  },
+
+  {
+    id: 'utility-css',
+    en: 'Utility-First CSS (Tailwind)',
+    zh: '原子化 CSS',
+    aliases: ['Tailwind', '原子化', 'utility-first', '工具类'],
+    cat: 'frontend',
+    tags: ['CSS', '工程'],
+    level: 'advanced',
+    summary: '用一堆单功能类（text-sm、p-4、flex）直接在 HTML 里拼样式：不用再想 class 名，但要克制。',
+    plain: [
+      '原子化/工具类优先（Tailwind 是代表）：预置大量单功能类（p-4 表示 padding: 1rem，text-red-500 表示颜色），直接在 HTML 里组合，不再为每个组件写专属 CSS 类。好处：不用起名、样式局部可预测、按需生成体积小。',
+      '代价：HTML 里类名很长、视觉和结构混在一起、团队要遵守统一的间距/颜色/字号体系（设计令牌）。它是「把设计系统做成类名」的方案，适合对设计系统有约束的团队。',
+      '跟 AI 说「用 Tailwind，间距用 p-4，颜色用主题色 token」，它能写出符合体系的代码；说「帮我写 CSS」它可能用传统类名或乱用魔改数值，破坏设计体系。'
+    ],
+    analogy: '原子化 CSS 像乐高：都是标准积木块（p-4、flex、text-sm），拼出任何造型；传统 CSS 则像手工木匠，每件家具都量身定制——乐高快、统一，但造型风格会被积木规格限制。',
+    talk: {
+      good: [
+        '用 Tailwind 工具类实现这个卡片，间距用 p-4、圆角用 rounded-lg。',
+        '请遵守项目设计令牌，颜色用 theme 里的 token 而不是随意色值。'
+      ],
+      bad: [
+        { say: '这个组件样式写得乱', why: '没说是混用 Tailwind 和自定义 CSS 还是命名乱，AI 需要先猜要往哪套体系收敛。' }
+      ]
+    },
+    misconceptions: [
+      'Tailwind 就是写内联样式？它是受控的类名系统，值和设计令牌绑定，不是裸内联。',
+      '用了 Tailwind 就不写 CSS？复杂交互和关键帧动画仍可能要自定义 CSS。'
+    ],
+    related: ['css-naming-methodology', 'primary-color', 'component']
+  },
+
+  {
+    id: 'iframe',
+    en: 'Iframe',
+    zh: '内嵌框架',
+    aliases: ['iframe', '嵌入', '内联框架'],
+    cat: 'frontend',
+    tags: ['HTML', '集成'],
+    level: 'common',
+    summary: 'iframe 在页面里嵌入另一个文档：适合第三方内容隔离，但要防点击劫持和性能开销。',
+    plain: [
+      'iframe 在页面里开一个「窗口」嵌入另一个页面：嵌入视频、地图、支付、第三方小工具都用它。优点：天然隔离——内部页面崩溃、样式、JS 都影响不到宿主，跨域通信靠 postMessage。',
+      '代价：每个 iframe 都独立加载资源，容易拖慢页面；SEO 不友好；还有安全风险——被钓鱼站点嵌入（点击劫持）需要用 X-Frame-Options 或 CSP 的 frame-ancestors 禁止。',
+      '跟 AI 说「这个支付页用 iframe 嵌入，宿主通过 postMessage 接收结果」，它知道跨域通信方式；说「嵌个第三方页面」它可能忽略安全头或忘了通信机制。'
+    ],
+    analogy: 'iframe 像展厅里摆的展柜：展柜里的展品（第三方页面）有自己的灯和玻璃罩，碰不到外面的展品，但要给展柜留地方（资源）和安保（防点击劫持）。',
+    talk: {
+      good: [
+        '嵌入第三方页面时请设置 sandbox 和 X-Frame-Options，防点击劫持。',
+        'iframe 和宿主跨域通信，用 postMessage 并校验消息来源。'
+      ],
+      bad: [
+        { say: '页面里嵌个东西', why: '没说嵌入什么、要不要交互通信、安全要求，AI 可能忽略安全配置。' }
+      ]
+    },
+    misconceptions: [
+      'iframe 越多页面越丰富？每个 iframe 独立加载资源，滥用会明显拖慢页面。',
+      'iframe 内容随便嵌？被恶意站点嵌套可形成点击劫持，需要安全头防护。'
+    ],
+    related: ['performance-core-web-vitals', 'html-semantic', 'cors']
+  },
+
+  {
+    id: 'event-object',
+    en: 'Event Object & Default Behavior',
+    zh: '事件对象与默认行为',
+    aliases: ['事件对象', 'preventDefault', 'stopPropagation', 'event'],
+    cat: 'frontend',
+    tags: ['事件', '交互'],
+    level: 'common',
+    summary: '事件对象带着 target 等信息；preventDefault 拦默认行为（跳转、提交），stopPropagation 拦事件继续冒泡。',
+    plain: [
+      '每次事件触发，回调会收到一个事件对象，里面有 target（触发元素）、currentTarget（监听元素）、type（事件类型）、keyCode（按键）、clientX/Y（坐标）等。处理交互几乎都要用到它。',
+      '两个常被混淆的方法：preventDefault() 阻止浏览器默认行为（点链接不跳转、提交表单不刷新、右键不出菜单），不阻止冒泡；stopPropagation() 阻止事件继续向上冒泡（防止触发父级监听），不阻止默认行为。',
+      '跟 AI 说「点提交按钮用 preventDefault 阻止页面刷新，再走 AJAX」它写对；说「点击没反应」它可能把 preventDefault 和 stopPropagation 用混。排查时先分清是默认行为还是冒泡问题。'
+    ],
+    analogy: '事件对象像事故现场的报告单：谁撞的（target）、在哪撞的（坐标）、什么事故（type）；preventDefault 是当场叫停「不许按原流程走」（不跳转、不提交），stopPropagation 是「别往上级汇报了」（不冒泡）。',
+    talk: {
+      good: [
+        '表单提交时 preventDefault 阻止刷新，然后发请求。',
+        '点这个按钮时 stopPropagation，避免触发外层容器的点击事件。'
+      ],
+      bad: [
+        { say: '点击事件总是触发两次', why: '多半是冒泡；不点破，AI 可能乱加 preventDefault 而没解决冒泡问题。' }
+      ]
+    },
+    misconceptions: [
+      'preventDefault 能阻止冒泡？不能，两者职责不同，要分开用。',
+      '事件对象只有坐标？还有 target、type、key、按键修饰符等一堆信息。'
+    ],
+    related: ['event-bubbling-delegation', 'form', 'button']
+  },
+
+  {
+    id: 'rendering-blocking',
+    en: 'Rendering-Blocking Resources',
+    zh: '渲染阻塞资源',
+    aliases: ['渲染阻塞', '阻塞资源', 'defer', 'async', 'render-blocking'],
+    cat: 'frontend',
+    tags: ['性能', '加载'],
+    level: 'advanced',
+    summary: 'CSS 和普通 script 会卡住首屏渲染：CSS 必须等、JS 可用 defer/async 延后，白屏往往就是它们。',
+    plain: [
+      '浏览器渲染页面时：head 里的 CSS 是渲染阻塞的——没下载解析完就不画首屏（避免闪变）；普通 script 也是阻塞的——执行完才继续解析后续 HTML。这就是「白屏好久」的常见原因。',
+      '对策：CSS 尽量小、关键内联；JS 默认放 body 末尾或用 defer（等 HTML 解析完再执行，保持顺序）/async（下载完就执行，不保证顺序）。首屏不需要的脚本一律延后。',
+      '跟 AI 说「首屏白屏时间长，检查渲染阻塞资源，脚本改 defer」，它知道往哪查；说「页面加载慢」它可能只想到压缩图片，漏了阻塞脚本这个大头。'
+    ],
+    analogy: '渲染阻塞像餐厅上菜流程：CSS 是「必须先摆好桌椅」（不摆好不开门），script 是「每次上菜前先停下听一段广播」（听完才继续上菜）——广播（脚本）能改到吃完再放（defer），首屏自然快。',
+    talk: {
+      good: [
+        '首屏性能差，请把所有非必要 script 加 defer，关键的放 body 末尾。',
+        '首屏 CSS 精简并内联关键样式，减少渲染阻塞。'
+      ],
+      bad: [
+        { say: '页面白屏很久', why: '很可能是渲染阻塞资源；不点破 AI 可能优化半天图片而没动脚本加载方式。' }
+      ]
+    },
+    misconceptions: [
+      '脚本放 head 和放 body 末尾没区别？head 里普通脚本会阻塞后续解析，差别很大。',
+      'defer 和 async 一样？defer 保序且等解析完，async 下载完立即执行、不保序。'
+    ],
+    related: ['performance-core-web-vitals', 'lazy-loading', 'reflow-repaint']
+  },
+
+  {
+    id: 'display-property',
+    en: 'Display Property & Box Types',
+    zh: 'display 与盒型',
+    aliases: ['display', '块级', '行内', 'inline-block', '盒型'],
+    cat: 'frontend',
+    tags: ['CSS', '盒模型'],
+    level: 'core',
+    summary: 'display 决定元素的盒型：block 独占一行、inline 排成一行、inline-block 两者兼顾，是布局错乱的常见源头。',
+    plain: [
+      'display 是 CSS 最基础的开关之一：block（块级）独占一行、宽高生效（div、p）；inline（行内）在一行里排、宽高和上下 margin 不生效（span、a）；inline-block 既排一行又支持宽高（常见于按钮图标混排）。',
+      '布局错乱常因盒型误解：给 inline 元素设 width 无效、行内元素之间出现莫名空隙（换行符产生的空白）、display:none 和 visibility:hidden 的区别（前者不占位后者占位）。',
+      'flex/grid 是现代布局主力，但 display 的理解仍是排查基础。跟 AI 说「这个 inline 元素设宽高没生效，改成 inline-block 或 flex 子项」，它一眼定位；说「样式没生效」它得先猜是不是盒型问题。'
+    ],
+    analogy: 'display 像排队方式：block 是每人单独一排（占一行），inline 是大家挤成一排往前走（一行多个人），inline-block 是并排走但每个人都有自己的一亩三分地（宽高生效）。',
+    talk: {
+      good: [
+        '给这个行内元素设置宽高没生效，请改为 inline-block 或 flex。',
+        '隐藏这个元素但保留占位，用 visibility: hidden 而不是 display: none。'
+      ],
+      bad: [
+        { say: '宽度设置了没反应', why: '多半是盒型问题（inline 元素）；不点破，AI 可能调半天 width 数值。' }
+      ]
+    },
+    misconceptions: [
+      'visibility: hidden 和 display: none 一样？前者占位、后者不占位，影响布局。',
+      'inline 元素能设 margin 和 padding？水平方向可以，垂直方向和宽高不行。'
+    ],
+    related: ['css-box-model', 'css-inheritance', 'flex-grid']
   }
   );
 })(window);

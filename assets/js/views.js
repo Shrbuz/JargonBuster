@@ -508,6 +508,9 @@
     return { title: '未找到 · 标准术语', html: html, mount: null };
   }
 
+  /* 分类图标注册表：分类页 hero 与左侧导航共用 */
+  W.STD_UTIL.CAT_ICONS = CAT_ICONS;
+
   W.STD_VIEWS = {
     home: renderHome,
     category: renderCategory,

@@ -294,6 +294,22 @@
   color: var(--muted);
 }
 .footer-meta { margin-top: var(--s1); font-size: var(--fs-xs); opacity: 0.8; }
+/* 页脚外链：等距排列、图标对齐 */
+.footer-meta.footer-links {
+  display: inline-flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  column-gap: 1.4em;
+  row-gap: 0.4em;
+}
+.footer-meta.footer-links a {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.32em;
+  white-space: nowrap;
+}
+.footer-meta.footer-links a svg { flex: none; opacity: 0.8; }
 
 /* 收藏页 */
 .fav-item { position: relative; }

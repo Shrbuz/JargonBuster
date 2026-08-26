@@ -53,10 +53,11 @@
       '<p class="side-label" style="margin-top:var(--s5)">分类导航</p><nav class="side-list">';
 
     D.cats.forEach(function (cat) {
+      var CI = W.STD_UTIL.CAT_ICONS || {};
       html +=
         '<a class="side-link' + (activeKey === 'c:' + cat.id ? ' active' : '') +
         '" href="#/c/' + encodeURIComponent(cat.id) + '" style="--dot:' + esc(cat.color) + '">' +
-          '<span class="side-dot"></span>' + esc(cat.name) +
+          '<span class="side-ico">' + (CI[cat.icon] || CI.book || '') + '</span>' + esc(cat.name) +
           '<span class="side-count">' + (counts[cat.id] || 0) + '</span>' +
         '</a>';
     });

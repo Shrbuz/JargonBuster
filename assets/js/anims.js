@@ -214,6 +214,129 @@
     el(stage, 'counter', '模型按 token 逐个吐字 —— 这就是「流式输出」');
   }
 
+  /* ---------- CSS 优先级 ---------- */
+  function buildSpec(stage) {
+    stage.style.setProperty('--T', '8s');
+    el(stage, 'sel s1', '#btn.save');
+    el(stage, 'sel s2', '.btn');
+    el(stage, 'sel s3', 'div');
+    el(stage, 'spec-badge b1', 'ID 1 · 类 1 · 元素 0');
+    el(stage, 'spec-badge b2', 'ID 0 · 类 1 · 元素 0');
+    el(stage, 'spec-badge b3', 'ID 0 · 类 0 · 元素 1');
+    el(stage, 'pill spec-win', '同一条样式有多个选择器命中？看权重：ID 最高 → 生效的是它');
+  }
+
+  /* ---------- margin 塌陷 ---------- */
+  function buildCollapse(stage) {
+    stage.style.setProperty('--T', '8s');
+    el(stage, 'block up', '上块<small>margin-bottom: 20px</small>');
+    el(stage, 'block down', '下块<small>margin-top: 30px</small>');
+    el(stage, 'mline m1', '');
+    el(stage, 'mline m2', '');
+    el(stage, 'pill m-note', '相邻 margin 不叠加而是「塌陷」成一个：取较大值 30px（不是 20 + 30）');
+  }
+
+  /* ---------- 层叠上下文 ---------- */
+  function buildStackCtx(stage) {
+    stage.style.setProperty('--T', '8s');
+    var pa = document.createElement('div');
+    pa.className = 'panel pa';
+    pa.innerHTML = '层叠上下文 A<br>z-index: 1';
+    var ia = document.createElement('div');
+    ia.className = 'inner ia';
+    ia.innerHTML = '子元素<br>z-index: 50';
+    pa.appendChild(ia);
+    stage.appendChild(pa);
+    var pb = document.createElement('div');
+    pb.className = 'panel pb';
+    pb.innerHTML = '层叠上下文 B<br>z-index: 2';
+    var ib = document.createElement('div');
+    ib.className = 'inner ib';
+    ib.innerHTML = '子元素<br>z-index: 10';
+    pb.appendChild(ib);
+    stage.appendChild(pb);
+    el(stage, 'pill ctx-note', '50 &gt; 10 却没用：子元素的 z 只在「父容器的层叠上下文」内比较，B 容器整体更高 → 盖住 A');
+  }
+
+  /* ---------- 变量提升 ---------- */
+  function buildHoist(stage) {
+    stage.style.setProperty('--T', '8s');
+    el(stage, 'code-line l1', 'console.log(x)   // ?');
+    el(stage, 'code-line l2', 'var x = 1');
+    el(stage, 'hoist-ghost', 'var 的声明被提升到顶部，但「赋值」留在原位');
+    el(stage, 'val v1', 'x = undefined', { left: '62%', top: '22%' });
+    el(stage, 'val v2', 'x = 1', { left: '62%', top: '46%' });
+    el(stage, 'pill tdz-tag', '对比 let/const：同样位置访问直接报错（暂时性死区 TDZ）');
+  }
+
+  /* ---------- 短路求值 ---------- */
+  function buildShort(stage) {
+    stage.style.setProperty('--T', '8s');
+    el(stage, 'a-label op-label l-and', 'a &amp;&amp; b　a = false');
+    el(stage, 'operand a1', 'a');
+    el(stage, 'operand b1', 'b');
+    el(stage, 'result r1', '结果 = false');
+    line(stage, 'skip sk1', { left: '25%', right: '28%', top: '28%' });
+    el(stage, 'a-label op-label l-or', 'a || b　a = true');
+    el(stage, 'operand a2', 'a');
+    el(stage, 'operand b2', 'b');
+    el(stage, 'result r2', '结果 = true');
+    line(stage, 'skip sk2', { left: '25%', right: '28%', top: '68%' });
+    el(stage, 'pill short-note', 'b 被「短路」跳过：a 已决定结果，b 根本不会执行（有副作用也不触发）');
+  }
+
+  /* ---------- 隐式类型转换 ---------- */
+  function buildCoerce(stage) {
+    stage.style.setProperty('--T', '9s');
+    el(stage, 'a-label co-title', '== 会先做隐式转换再比较（=== 不做转换）');
+    el(stage, 'co-left l1', '&quot;5&quot;');
+    el(stage, 'co-conv l1', '转数字');
+    el(stage, 'co-right l1', '5');
+    el(stage, 'co-res l1', 'true ✓');
+    el(stage, 'co-left l2', '0');
+    el(stage, 'co-conv l2', '转布尔');
+    el(stage, 'co-right l2', 'false');
+    el(stage, 'co-res l2', 'true ✓');
+    el(stage, 'co-left l3', 'null');
+    el(stage, 'co-conv l3', '== undefined');
+    el(stage, 'co-right l3', 'undefined');
+    el(stage, 'co-res l3', 'true ✓');
+    el(stage, 'co-left l4', '&quot;1&quot;');
+    el(stage, 'co-conv l4', '=== 不做转换');
+    el(stage, 'co-right l4', '1');
+    el(stage, 'co-res l4 warn', 'false ✗');
+    el(stage, 'pill co-note', '隐式转换藏着很多坑：能用 === 就别用 ==');
+  }
+
+  /* ---------- fetch vs pull ---------- */
+  function buildFetchPull(stage) {
+    stage.style.setProperty('--T', '8s');
+    el(stage, 'rp-track', '');
+    el(stage, 'lp-track', '');
+    el(stage, 'a-label track-label lb-remote', 'remote/main');
+    el(stage, 'a-label track-label lb-local', 'local/main');
+    el(stage, 'commit rc1', '');
+    el(stage, 'commit rc2', '');
+    el(stage, 'commit lc1', '');
+    el(stage, 'fetched fc1', '');
+    el(stage, 'fetched fc2', '');
+    el(stage, 'pill fetch-tag', 'fetch：把远程提交拿到本地（暂存），此时 local/main 指针不动');
+    el(stage, 'pill pull-tag', 'pull = fetch + merge：合并后 local/main 前进到与远程一致');
+  }
+
+  /* ---------- 事务隔离 ---------- */
+  function buildTxIso(stage) {
+    var w = W_(stage);
+    stage.style.setProperty('--T', '9s');
+    el(stage, 'a-node t1', '事务 T1<small>写余额</small>');
+    el(stage, 'a-node t2', '事务 T2<small>读余额</small>');
+    el(stage, 'db-box', '余额 = 100<small>（未提交）</small>');
+    el(stage, 'a-dot warn dirty-d', '', { right: '24%', top: '50%', '--tx': '-' + Math.round(w * 0.24) + 'px', '--ty': '-8px' });
+    el(stage, 'a-dot ok commit-d', '', { left: '50%', top: '58%', '--tx': Math.round(w * 0.24) + 'px', '--ty': '10px' });
+    el(stage, 'pill dirty-tag', '读未提交：T2 能读到未提交的 100 —— 脏读！');
+    el(stage, 'pill commit-tag', '读已提交 / 可重复读 / 串行化：等 commit 后才可见，防脏读');
+  }
+
   W.STD_ANIMS = {
     'callback-chain': { title: '回调链的执行顺序', hint: '绿色依次点亮 = 调用顺序', stageClass: 'st-callback', build: buildCallback },
     'event-loop': { title: '事件循环', hint: '圆点转动一圈 = 主线程取一轮任务', stageClass: 'st-eloop', build: buildEloop },
@@ -226,6 +349,14 @@
     'sync-vs-async': { title: '同步 vs 异步', hint: '上下两条车道对比调度差异', stageClass: 'st-sync', build: buildSyncAsync },
     'cache-hit-miss': { title: '缓存的命中与未命中', hint: '绿线命中直达；橙线未命中回源', stageClass: 'st-cache', build: buildCache },
     'git-branch-merge': { title: 'Git 分支与合并', hint: '提交点亮 → 分支推进 → 合流', stageClass: 'st-git', build: buildGitBranch },
-    'token-stream': { title: 'Token 流式生成', hint: '色块逐个出现即模型逐词输出', stageClass: 'st-token', build: buildToken }
+    'token-stream': { title: 'Token 流式生成', hint: '色块逐个出现即模型逐词输出', stageClass: 'st-token', build: buildToken },
+    'css-specificity': { title: 'CSS 优先级权重', hint: '三个选择器依次点亮，权重最高者胜出', stageClass: 'st-spec', build: buildSpec },
+    'margin-collapse': { title: 'margin 塌陷', hint: '两条 margin 相遇后合并成一条，取较大值', stageClass: 'st-collapse', build: buildCollapse },
+    'stacking-context': { title: '层叠上下文', hint: '子元素 z 再高也跳不出父容器', stageClass: 'st-stackctx', build: buildStackCtx },
+    'hoisting': { title: '变量提升', hint: '声明被提前、赋值留在原位', stageClass: 'st-hoist', build: buildHoist },
+    'boolean-short-circuit': { title: '短路求值', hint: 'a 已定结果 → b 被跳过', stageClass: 'st-short', build: buildShort },
+    'type-coercion': { title: '隐式类型转换', hint: '逐行看 == 如何转换后比较', stageClass: 'st-coerce', build: buildCoerce },
+    'git-fetch-pull': { title: 'fetch 与 pull 的区别', hint: 'fetch 只拿不回，pull 才合并', stageClass: 'st-fetchpull', build: buildFetchPull },
+    'transaction-isolation': { title: '事务隔离级别', hint: '不同隔离级别下能否读到未提交数据', stageClass: 'st-txiso', build: buildTxIso }
   };
 })(window);

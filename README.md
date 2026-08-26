@@ -9,14 +9,13 @@
 并为必要概念配了 **SVG 图解** 与 **可播放的 CSS 动画**。
 
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
-![词条](https://img.shields.io/badge/词条-240%2B-brightgreen)
+![词条](https://img.shields.io/badge/词条-444-brightgreen)
 ![零构建](https://img.shields.io/badge/构建-零依赖-ff69b4.svg)
 ![纯前端](https://img.shields.io/badge/前端-vanilla--js-4a90d9.svg)
+[![GitHub stars](https://img.shields.io/github/stars/Shrbuz/JargonBuster?style=flat)](https://github.com/Shrbuz/JargonBuster)
+[![GitHub forks](https://img.shields.io/github/forks/Shrbuz/JargonBuster?style=flat)](https://github.com/Shrbuz/JargonBuster)
 
-<!-- 创建仓库后，把 USER / REPO 替换为你的用户名与仓库名，即可点亮动态徽章：
-[![GitHub stars](https://img.shields.io/github/stars/USER/REPO?style=flat)](https://github.com/USER/REPO)
-[![GitHub forks](https://img.shields.io/github/forks/USER/REPO?style=flat)](https://github.com/USER/REPO)
--->
+**在线访问：** <https://st.ewri.site/>
 
 ![首页 Demo](docs/demo-home.png)
 
@@ -35,11 +34,11 @@
 ## 特性
 
 - **纯静态零构建**：无框架、无依赖、无打包，`git pull` 即部署
-- **十大分类 × 240+ 词条**：编程基础 / 数据结构与算法 / 前端 / 后端 / 数据库 / 网络协议 / Git 协作 / 工程实践 / 架构设计 / AI 与大模型
+- **十大分类 × 444 词条**：编程基础 / 数据结构与算法 / 前端 / 后端 / 数据库 / 网络协议 / Git 协作 / 工程实践 / 架构设计 / AI 与大模型
 - **全站搜索**：中文、English、别名、标签、正文全文匹配；`/` 聚焦，`↑↓` 选择，`Enter` 跳转
 - **学习路线**：循序渐进的路径把散落词条串起来，含 UI 沟通速查线
 - **学习进度与收藏**：localStorage 本地记录「已掌握」，分类进度条可视化
-- **图示与动画**：27 张手绘 SVG 图解随主题变色；12 个循环概念动画可暂停重播
+- **图示与动画**：27 张手绘 SVG 图解随主题变色；20 个循环概念动画可暂停重播
 - **媒体槽位机制**：词条可预留图示位置，后续优雅填充，页面永不破版
 - **深浅双主题 · 移动端适配 · 无障碍**（焦点态 / aria / 减动效偏好）
 
@@ -47,11 +46,11 @@
 
 | 分类 | 词条数 | 分类 | 词条数 |
 | --- | --- | --- | --- |
-| 编程基础 | 16 | 网络协议 | 15 |
-| 数据结构与算法 | 15 | Git 协作 | 12 |
-| 前端 | 104 | 工程实践 | 16 |
-| 后端 | 18 | 架构设计 | 14 |
-| 数据库 | 14 | AI 与大模型 | 16 |
+| 编程基础 | 36 | 网络协议 | 35 |
+| 数据结构与算法 | 35 | Git 协作 | 32 |
+| 前端 | 128 | 工程实践 | 36 |
+| 后端 | 38 | 架构设计 | 34 |
+| 数据库 | 34 | AI 与大模型 | 36 |
 
 ## 快速开始
 
@@ -68,7 +67,7 @@ node tools/serve.js        # 或 npx serve .
 本仓库没有任何构建步骤——**拉取下来就是成品**。
 
 ```bash
-git clone <你的仓库地址> /var/www/standard-term
+git clone https://github.com/Shrbuz/JargonBuster.git /var/www/standard-term
 cd /var/www/standard-term && git pull
 ```
 
