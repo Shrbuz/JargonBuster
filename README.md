@@ -8,7 +8,7 @@
 每个词条提供：**一句话定义 · 通俗讲解 · 生活类比 · 「怎么对 AI 说」· 常见误解**，
 并为必要概念配了 **SVG 图解** 与 **可播放的 CSS 动画**。
 
-![License](https://img.shields.io/badge/license-MIT-green.svg)
+![License](https://img.shields.io/github/license/Shrbuz/JargonBuster)
 ![词条](https://img.shields.io/badge/词条-444-brightgreen)
 ![零构建](https://img.shields.io/badge/构建-零依赖-ff69b4.svg)
 ![纯前端](https://img.shields.io/badge/前端-vanilla--js-4a90d9.svg)
@@ -145,5 +145,5 @@ standard-term/
 
 ## 授权
 
-- 站点代码：**MIT**
-- 词条内容：**CC BY-SA 4.0**（转载请署名并以相同方式共享）
+- 站点代码：**MIT**（见 [`LICENSE`](LICENSE)）
+- 词条内容：**CC BY-SA 4.0**（见 [`LICENSE-content`](LICENSE-content)，转载须署名并以相同方式共享）
