@@ -65,6 +65,31 @@
     return out;
   }
 
+  /** 图鉴元素检索：标准名 / 英文 / 别名 / 描述，与词条搜索同样 AND 语义、按累计分排序 */
+  function searchVisuals(query) {
+    var tokens = tokenize(query);
+    if (!tokens.length || !W.STD_VISUAL_GROUPS) return [];
+    var out = [];
+    W.STD_VISUAL_GROUPS.forEach(function (g) {
+      g.items.forEach(function (it) {
+        var aliases = (it.aliases || []).join('\n');
+        var total = 0;
+        for (var i = 0; i < tokens.length; i++) {
+          var tok = tokens[i];
+          var best = fieldScore(it.name, tok, 100);
+          best = Math.max(best, fieldScore(it.en, tok, 90));
+          best = Math.max(best, fieldScore(aliases, tok, 80));
+          best = Math.max(best, fieldScore(it.desc, tok, 40));
+          if (best === 0) { total = 0; break; } // AND 语义
+          total += best;
+        }
+        if (total > 0) out.push({ item: it, group: g, score: total });
+      });
+    });
+    out.sort(function (a, b) { return b.score - a.score; });
+    return out;
+  }
+
   /** 将 text 中命中的片段包上 <mark>（安全转义后输出） */
   function highlight(text, query) {
     var raw = String(text == null ? '' : text);
@@ -115,5 +140,5 @@
     return out;
   }
 
-  W.STD_SEARCH = { search: search, highlight: highlight, suggestions: suggestions, tokenize: tokenize };
+  W.STD_SEARCH = { search: search, searchVisuals: searchVisuals, highlight: highlight, suggestions: suggestions, tokenize: tokenize };
 })(window);

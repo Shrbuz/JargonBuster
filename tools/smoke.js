@@ -77,7 +77,8 @@ function load(rel) {
   .concat(fs.readdirSync(path.join(ROOT, 'assets/js/data'))
     .filter(f => /^terms\..+\.js$/.test(f)).sort()
     .map(f => 'assets/js/data/' + f))
-  .concat(['assets/js/visuals.js', 'assets/js/anims.js', 'assets/js/data.js', 'assets/js/search.js',
+  .concat(['assets/js/data/visual-elements.js', 'assets/js/visual-demos.js',
+           'assets/js/visuals.js', 'assets/js/anims.js', 'assets/js/data.js', 'assets/js/search.js',
            'assets/js/components.js', 'assets/js/views.js', 'assets/js/router.js'])
   .forEach(load);
 
@@ -120,6 +121,39 @@ if (D) {
   assert(nb.next && nb.next.cat === 'backend', '相邻词条计算正常');
 }
 
+/* ---------- 前端可视化标准术语 ---------- */
+console.log('  --- 可视化图鉴 ---');
+try {
+  const VG = W.STD_VISUAL_GROUPS || [];
+  const VD = W.STD_VISUAL_DEMOS || {};
+  const allItems = VG.flatMap(g => g.items);
+  assert(VG.length >= 6, '图鉴分组 >= 6（实际 ' + VG.length + '）');
+  assert(allItems.length >= 50, '图鉴元素 >= 50（实际 ' + allItems.length + '）');
+  const noDemo = allItems.filter(it => typeof VD[it.demo] !== 'function');
+  assert(noDemo.length === 0, '每个元素都有呈现效果示例' + (noDemo.length ? '（缺失: ' + noDemo.map(i => i.id).join(',') + '）' : ''));
+  const badItem = allItems.find(it => !it.name || !it.en || !it.desc || !it.id);
+  assert(!badItem, '元素名称/英文/描述字段齐全');
+
+  const idx = W.STD_VIEWS.visuals();
+  assert(idx.html.includes('前端可视化标准术语'), '图鉴总览页可渲染');
+  const grp = W.STD_VIEWS.visualGroup('basics');
+  assert(grp && (grp.html.match(/class="vs-item"/g) || []).length === 8, '分组页渲染 8 个基础元素区块');
+  assert(W.STD_VIEWS.visualGroup('nope') === null, '未知分组安全返回空');
+
+  const vsHit = W.STD_SEARCH.searchVisuals('走马灯');
+  assert(vsHit.length >= 1 && vsHit[0].item.id === 'carousel', '图鉴搜索「走马灯」命中轮播');
+  assert(W.STD_SEARCH.searchVisuals('Toggle').some(r => r.item.id === 'switch'), '图鉴搜索英文别名 Toggle 命中开关');
+  const termBtn = W.STD_VIEWS.term('button');
+  assert(termBtn && termBtn.html.includes('#/visuals/basics/button'), '词条详情页含图鉴反链');
+
+  W.location.hash = '#/visuals/basics/button';
+  const r = W.STD_ROUTER.parseHash();
+  assert(r.name === 'visualGroup' && r.group === 'basics' && r.item === 'button', '图鉴三级路由解析正确');
+} catch (e) {
+  failures++;
+  console.log('  FAIL - 图鉴检查异常: ' + e.message);
+}
+
 /* ---------- 应用启动链路（加载 main 并真实执行 boot） ---------- */
 console.log('  --- 启动链路 ---');
 try {
@@ -127,6 +161,7 @@ try {
 
   const sb = els.sidebar ? els.sidebar._html : '';
   assert(sb.includes('我的收藏'), '侧栏含「我的收藏」入口');
+  assert(sb.includes('可视化图鉴'), '侧栏含「可视化图鉴」入口');
   assert(sb.includes('分类导航'), '侧栏分类导航正常渲染');
   assert(sb.includes('编程基础'), '侧栏含第一个分类');
 
@@ -135,6 +170,16 @@ try {
   W.STD_ROUTER.refresh();
   const favHtml = els.view ? els.view._html : '';
   assert(favHtml.includes('我的收藏'), '#/favs 收藏视图可渲染');
+
+  // 图鉴分组页直链（真实执行 mount：树绑定 / 直链滚动回退路径）
+  W.location.hash = '#/visuals/basics/button';
+  W.STD_ROUTER.refresh();
+  assert((els.view._html || '').includes('vs-item'), '图鉴分组页直链渲染+挂载正常');
+
+  // 搜索页图鉴分区（走马灯 → 轮播标本）
+  W.location.hash = '#/s/' + encodeURIComponent('走马灯');
+  W.STD_ROUTER.refresh();
+  assert((els.view._html || '').includes('vs-match'), '搜索页展示图鉴命中分区');
 
   // 首页恢复
   W.location.hash = '';

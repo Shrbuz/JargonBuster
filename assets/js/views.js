@@ -149,6 +149,18 @@
         '</div>' +
       '</header>';
 
+    if (catId === 'frontend' && W.STD_VISUAL_GROUPS) {
+      html +=
+        '<a class="visual-entry" href="#/visuals">' +
+          '<span class="visual-entry-badge">可视化</span>' +
+          '<span class="visual-entry-body">' +
+            '<strong>前端可视化标准术语</strong>' +
+            '<span>把界面元素的叫法和真实样子对齐，沟通、描述、让 AI 理解都有共同语言</span>' +
+          '</span>' +
+          '<span class="visual-entry-arrow">→</span>' +
+        '</a>';
+    }
+
     if (tags.length > 1) {
       html += '<div class="cat-tags" role="group" aria-label="按标签筛选">' +
         '<button type="button" class="tag-chip tag-filter is-active" data-tag="">全部</button>' +
@@ -208,6 +220,12 @@
     var cat = D.getCategory(t.cat);
     var nb = D.neighborsOf(t);
     var related = D.relatedOf(t);
+    var visuals = [];
+    if (W.STD_VISUAL_GROUPS) {
+      W.STD_VISUAL_GROUPS.forEach(function (g) {
+        g.items.forEach(function (it) { if (it.term === id) visuals.push({ group: g, item: it }); });
+      });
+    }
 
     var html =
       '<nav class="breadcrumb" aria-label="面包屑">' +
@@ -235,6 +253,14 @@
 
       '<h2 class="section-label">一句话定义</h2>' +
       '<p class="define-card">' + esc(t.summary) + '</p>' +
+
+      (visuals.length
+        ? '<p class="term-visual-row"><span>可视化图鉴：</span>' +
+          visuals.map(function (v) {
+            return '<a class="vs-term-link" href="#/visuals/' + encodeURIComponent(v.group.id) + '/' + encodeURIComponent(v.item.id) + '">' +
+              esc(v.item.name) + '<span class="vs-en">' + esc(v.group.name) + '</span></a>';
+          }).join('') + '</p>'
+        : '') +
 
       C.mediaHtml(t) +
 
@@ -329,11 +355,22 @@
   function renderSearchPage(query) {
     var D = W.STD_DATA;
     var results = W.STD_SEARCH.search(query);
+    var vres = W.STD_SEARCH.searchVisuals ? W.STD_SEARCH.searchVisuals(query) : [];
+
+    function visualSection(list) {
+      return '<h2 class="group-title">可视化图鉴<span class="n">' + list.length + '</span></h2>' +
+        '<div class="vs-match-list">' + list.map(function (r) {
+          return '<a class="vs-match" href="#/visuals/' + encodeURIComponent(r.group.id) + '/' + encodeURIComponent(r.item.id) + '">' +
+            W.STD_SEARCH.highlight(r.item.name, query) +
+            '<span class="g">' + esc(r.group.name) + ' · ' + esc(r.item.en) + '</span></a>';
+        }).join('') + '</div>';
+    }
 
     var html =
       '<header class="page-head">' +
         '<h1 class="page-title">搜索：“' + esc(query) + '”</h1>' +
-        '<p class="page-sub">共找到 ' + results.length + ' 个相关词条</p>' +
+        '<p class="page-sub">共找到 ' + results.length + ' 个相关词条' +
+          (vres.length ? '、' + vres.length + ' 个图鉴元素' : '') + '</p>' +
       '</header>';
 
     if (!results.length) {
@@ -343,7 +380,9 @@
           '<h3>没有找到相关词条</h3>' +
           '<p>换个关键词试试？比如中文、English 或标签名。</p>' +
           '<a class="btn btn-primary" href="#/">返回首页</a>' +
-        '</div>' +
+        '</div>';
+      if (vres.length) html += visualSection(vres);
+      html +=
         '<h2 class="section-label">不如先看看这些</h2>' +
         '<div class="term-grid">' + sugg.map(function (t) { return C.termCard(t); }).join('') + '</div>';
       return { title: '搜索 ' + query + ' · 标准术语', html: html, mount: null };
@@ -359,6 +398,8 @@
       html += '<h2 class="group-title">' + esc(cat.name) + '<span class="n">' + list.length + '</span></h2>' +
         '<div class="term-grid">' + list.map(function (t) { return C.termCard(t, query); }).join('') + '</div>';
     });
+
+    if (vres.length) html += visualSection(vres);
 
     return { title: '搜索 ' + query + ' · 标准术语', html: html, mount: null };
   }
@@ -418,6 +459,172 @@
     };
 
     return { title: '我的收藏 · 标准术语', html: html, mount: mount };
+  }
+
+  /* ================= 前端可视化标准术语 ================= */
+
+  function renderVisualIndex() {
+    var groups = W.STD_VISUAL_GROUPS || [];
+
+    var html =
+      '<nav class="breadcrumb" aria-label="面包屑">' +
+        '<a href="#/">首页</a><span class="sep">/</span><span class="here">前端可视化标准术语</span>' +
+      '</nav>' +
+      '<header class="page-head">' +
+        '<h1 class="page-title">前端可视化标准术语</h1>' +
+        '<p class="page-sub">同一个界面元素，叫法常常五花八门：轮播图还是走马灯？模态框还是对话框？名字没对齐，人与人沟通有歧义，AI 也难以准确理解需求。这里给每个常见元素一个规范名称和通俗解释，并直接呈现真实效果——看着样子记名字，拿着名字去沟通。</p>' +
+      '</header>' +
+      '<div class="vs-groups">';
+
+    groups.forEach(function (g) {
+      html +=
+        '<section class="vs-group-card">' +
+          '<header><a href="#/visuals/' + encodeURIComponent(g.id) + '">' +
+            '<h2>' + esc(g.name) + '<span class="vs-en">' + esc(g.en) + '</span></h2>' +
+            '<span class="vs-count">' + g.items.length + ' 元素 →</span>' +
+          '</a></header>' +
+          '<p class="vs-group-desc">' + esc(g.desc) + '</p>' +
+          '<ul class="vs-group-items">' +
+            g.items.map(function (it) {
+              return '<li><a href="#/visuals/' + encodeURIComponent(g.id) + '/' + encodeURIComponent(it.id) + '">' +
+                esc(it.name) + '<span>' + esc(it.en) + '</span></a></li>';
+            }).join('') +
+          '</ul>' +
+        '</section>';
+    });
+
+    html += '</div>';
+    return { title: '前端可视化标准术语 · 标准术语', html: html, mount: null };
+  }
+
+  function renderVisualGroup(groupId, itemId) {
+    var groups = W.STD_VISUAL_GROUPS || [];
+    var group = null;
+    groups.forEach(function (g) { if (g.id === groupId) group = g; });
+    if (!group) return null;
+
+    var DEMOS = W.STD_VISUAL_DEMOS || {};
+    var D = W.STD_DATA;
+
+    var html =
+      '<nav class="breadcrumb" aria-label="面包屑">' +
+        '<a href="#/">首页</a><span class="sep">/</span>' +
+        '<a href="#/visuals">前端可视化标准术语</a><span class="sep">/</span>' +
+        '<span class="here">' + esc(group.name) + '</span>' +
+      '</nav>' +
+      '<header class="page-head">' +
+        '<h1 class="page-title">' + esc(group.name) + '<span class="vs-en" style="margin-left:8px">' + esc(group.en) + '</span></h1>' +
+        '<p class="page-sub">' + esc(group.desc) + '</p>' +
+      '</header>' +
+      '<div class="vs-layout">' +
+        '<aside class="vs-tree" aria-label="组件树导航">' +
+          '<a class="vs-tree-home" href="#/visuals">← 全部分组</a>';
+
+    groups.forEach(function (g) {
+      if (g.id === group.id) {
+        html += '<span class="vs-tree-group-btn is-current" aria-current="true">' + esc(g.name) +
+          '<span class="vs-count">' + g.items.length + '</span></span>';
+        html += '<div class="vs-tree-items">';
+        g.items.forEach(function (it) {
+          html += '<button type="button" class="vs-tree-item' + (it.id === itemId ? ' is-target' : '') +
+            '" data-scroll="vs-' + esc(it.id) + '">' + esc(it.name) + '</button>';
+        });
+        html += '</div>';
+      } else {
+        html += '<a class="vs-tree-group-btn" href="#/visuals/' + encodeURIComponent(g.id) + '">' +
+          esc(g.name) + '<span class="vs-count">' + g.items.length + '</span></a>';
+      }
+    });
+
+    html += '</aside><div class="vs-main">';
+
+    group.items.forEach(function (it) {
+      var demoFn = DEMOS[it.demo];
+      html +=
+        '<section class="vs-item" id="vs-' + esc(it.id) + '" tabindex="-1" aria-labelledby="vs-t-' + esc(it.id) + '">' +
+          '<div class="vs-info">' +
+            '<h3 class="vs-name" id="vs-t-' + esc(it.id) + '">' + esc(it.name) +
+              '<span class="vs-en">' + esc(it.en) + '</span></h3>' +
+            ((it.aliases && it.aliases.length)
+              ? '<p class="vs-aliases">别名：' + esc(it.aliases.join('、')) + '</p>'
+              : '') +
+            '<p class="vs-desc">' + esc(it.desc) + '</p>' +
+            (it.term && D.termMap.has(it.term)
+              ? '<a class="vs-term-link" href="#/t/' + encodeURIComponent(it.term) + '">查看词条详解 →</a>'
+              : '') +
+          '</div>' +
+          '<div class="vs-stage">' + (demoFn ? demoFn() : '<span class="vs-missing">示例待补充</span>') + '</div>' +
+        '</section>';
+    });
+
+    html += '</div></div>';
+
+    var mount = function (root) {
+      var tree = root.querySelector('.vs-tree');
+      var sections = root.querySelectorAll('.vs-item');
+
+      function activate(btn) {
+        if (!tree) return;
+        tree.querySelectorAll('.vs-tree-item').forEach(function (b) { b.classList.remove('is-active'); });
+        if (btn) btn.classList.add('is-active');
+      }
+
+      function flash(target) {
+        target.classList.remove('is-flash');
+        void target.offsetWidth; // 重置动画
+        target.classList.add('is-flash');
+        target.focus({ preventScroll: true });
+      }
+
+      // 树节点每次渲染都是新元素，必须每次重绑；
+      // 不能用容器级守卫（旧监听随旧节点销毁，守卫会阻止新节点绑定 → 点击失效）
+      if (tree) {
+        tree.addEventListener('click', function (e) {
+          var btn = e.target.closest('[data-scroll]');
+          if (!btn) return;
+          var target = root.querySelector('#' + btn.getAttribute('data-scroll'));
+          if (!target) return;
+          activate(btn);
+          target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          flash(target);
+          // 静默同步 hash，方便把当前定位分享出去（replaceState 不触发重渲染）
+          if (W.history && W.history.replaceState) {
+            var itemIdFromTree = btn.getAttribute('data-scroll').slice(3);
+            W.history.replaceState(null, '', '#/visuals/' + group.id + '/' + itemIdFromTree);
+          }
+        });
+      }
+
+      // 直链进入（#/visuals/:group/:item）：
+      // 路由在 mount 之后还会 scrollTo(0,0)，必须等它执行完再滚到目标（双 rAF 兜底）
+      if (itemId) {
+        var t = root.querySelector('#vs-' + itemId);
+        if (t) {
+          var jump = function () {
+            t.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            flash(t);
+          };
+          if (typeof W.requestAnimationFrame === 'function') {
+            W.requestAnimationFrame(function () { W.requestAnimationFrame(jump); });
+          } else {
+            jump();
+          }
+        }
+      }
+
+      // 滚动联动：视口中的元素在树导航里高亮
+      if (tree && 'IntersectionObserver' in W) {
+        var io = new W.IntersectionObserver(function (entries) {
+          entries.forEach(function (en) {
+            if (!en.isIntersecting) return;
+            activate(tree.querySelector('[data-scroll="' + en.target.id + '"]'));
+          });
+        }, { rootMargin: '-25% 0px -65% 0px' });
+        sections.forEach(function (s) { io.observe(s); });
+      }
+    };
+
+    return { title: group.name + ' · 前端可视化标准术语', html: html, mount: mount };
   }
 
   /* ================= 关于页 ================= */
@@ -517,6 +724,8 @@
     term: renderTerm,
     search: renderSearchPage,
     favs: renderFavs,
+    visuals: renderVisualIndex,
+    visualGroup: renderVisualGroup,
     about: renderAbout,
     notFound: renderNotFound
   };

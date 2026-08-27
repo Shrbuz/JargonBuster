@@ -50,6 +50,11 @@
           (favCount ? '<span class="side-count">' + favCount + '</span>' : '') +
         '</a>' +
       '</nav>' +
+      '<p class="side-label" style="margin-top:var(--s5)">图鉴</p><nav class="side-list">' +
+        '<a class="side-link' + (activeKey === 'visuals' ? ' active' : '') + '" href="#/visuals" title="常见界面元素的呈现效果速查">' +
+          W.STD_UTIL.ICONS.eye + '<span>可视化图鉴</span>' +
+        '</a>' +
+      '</nav>' +
       '<p class="side-label" style="margin-top:var(--s5)">分类导航</p><nav class="side-list">';
 
     D.cats.forEach(function (cat) {
@@ -237,6 +242,8 @@
         if (t) activeKey = 'c:' + t.cat;
       } else if (route.name === 'favs') {
         activeKey = 'favs';
+      } else if (route.name === 'visualIndex' || route.name === 'visualGroup') {
+        activeKey = 'visuals';
       }
       renderSidebar(activeKey);
     });

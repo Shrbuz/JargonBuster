@@ -35,7 +35,8 @@
 
 - **纯静态零构建**：无框架、无依赖、无打包，`git pull` 即部署
 - **十大分类 × 444 词条**：编程基础 / 数据结构与算法 / 前端 / 后端 / 数据库 / 网络协议 / Git 协作 / 工程实践 / 架构设计 / AI 与大模型
-- **全站搜索**：中文、English、别名、标签、正文全文匹配；`/` 聚焦，`↑↓` 选择，`Enter` 跳转
+- **全站搜索**：中文、English、别名、标签、正文全文匹配，图鉴元素一并命中；`/` 聚焦，`↑↓` 选择，`Enter` 跳转
+- **可视化标准术语图鉴**：网页与 App 常见界面元素按「基础 / 表单 / 导航 / 数据展示 / 反馈 / 浮层 / 媒体」分组，每个元素 = 标准名与别名 + 一句话描述 + 真实呈现标本；搜「走马灯」直达轮播，词条页与图鉴双向互链
 - **学习路线**：循序渐进的路径把散落词条串起来，含 UI 沟通速查线
 - **学习进度与收藏**：localStorage 本地记录「已掌握」，分类进度条可视化
 - **图示与动画**：27 张手绘 SVG 图解随主题变色；20 个循环概念动画可暂停重播
@@ -74,6 +75,7 @@ cd /var/www/standard-term && git pull
 然后让任意静态服务器指向该目录即可：
 
 - **Nginx**：参考 [`deploy/nginx.conf.example`](deploy/nginx.conf.example)
+- **宝塔面板**：参考 [`deploy/bt_add_site.py`](deploy/bt_add_site.py)（调 panelSite.AddSite 幂等注册纯静态站点）
 - **GitHub Pages**：仓库设置里选择根目录分支作为发布源
 - **Vercel / Netlify / Cloudflare Pages**：Framework Preset 选 Other / 无，发布目录填仓库根目录
 
@@ -83,7 +85,7 @@ cd /var/www/standard-term && git pull
 
 ```bash
 node tools/validate.js   # 数据完整性校验（ID 唯一 / 分类存在 / 必填字段 / related 引用 / 文本规范）
-node tools/smoke.js      # 运行时冒烟测试（搜索 / 聚合 / 路由链路）
+node tools/smoke.js      # 运行时冒烟测试（搜索 / 图鉴 / 路由与启动链路）
 ```
 
 ## 如何贡献
@@ -113,6 +115,12 @@ node tools/smoke.js      # 运行时冒烟测试（搜索 / 聚合 / 路由链�
 | `related` | - | 相关词条 id 数组（必须真实存在） |
 | `visual` | - | `{kind:'svg',id}` / `{kind:'anim',id}` / `{kind:'img',src 或 pending:true}` |
 
+### 添加一个图鉴元素
+
+1. 在 `assets/js/data/visual-elements.js` 找到所属分组追加元素（`id / name / en / aliases / desc / demo`，可选 `term` 关联词条）；
+2. 在 `assets/js/visual-demos.js` 注册同名 `demo` 标本：纯静态 HTML，类名 `vd-*` 前缀，颜色只用设计令牌；
+3. 需要新样式时在 `assets/css/visual-page.css` 补充，运行 `node tools/smoke.js` 直到「全部通过 ✓」。
+
 ### 贡献守则
 
 - 讲人话：先说结论再展开，避免论文腔；可用「你」称呼读者
@@ -127,10 +135,11 @@ standard-term/
 ├── index.html              # 单页入口（hash 路由，可直接双击打开）
 ├── docs/                   # 文档与演示截图
 ├── assets/
-│   ├── css/                # 设计令牌 / 布局 / 视图 / 详情 / 动画
+│   ├── css/                # 设计令牌 / 布局 / 视图 / 详情 / 图鉴 / 动画
 │   ├── js/
-│   │   ├── data/           # 十大分类词条数据（内容都在这）
+│   │   ├── data/           # 十大分类词条数据 + 图鉴元素数据（内容都在这）
 │   │   ├── visuals.js      # SVG 图解注册表
+│   │   ├── visual-demos.js # 图鉴元素呈现效果注册表
 │   │   ├── anims.js        # 动画注册表
 │   │   └── …               # 数据聚合 / 搜索 / 组件 / 视图 / 路由 / 入口
 │   └── img/                # 图片媒体槽位
