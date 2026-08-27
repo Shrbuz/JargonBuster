@@ -9,3 +9,9 @@ dist/
 build/
 .vscode/
 .idea/
+
+# 平台发布草稿（B站 / 简书等安利文，不入库）
+article/
+
+# 本地技能配置（含敏感信息，不入库）
+.cqy-skills-setting/
