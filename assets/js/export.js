@@ -36,6 +36,9 @@
     return el;
   }
 
+  /* SVG 展示属性列表：这些属性可能写着 var(--xxx)，在 foreignObject 里不解析 */
+  var SVG_PRESENTATION_ATTRS = ['fill', 'stroke', 'stop-color', 'flood-color', 'lighting-color', 'color'];
+
   /* 深度克隆 + 内联计算样式 + 伪元素物化 + 清理导出标记 */
   function buildClone(srcRoot) {
     var dstRoot = srcRoot.cloneNode(true);
@@ -43,7 +46,30 @@
     function walk(src, dst) {
       if (!isEl(src)) return;
       var cs = W.getComputedStyle(src);
-      if (cs) dst.setAttribute('style', (dst.getAttribute('style') || '') + cs.cssText);
+      if (cs) {
+        var styleText = cs.cssText;
+        dst.setAttribute('style', (dst.getAttribute('style') || '') + styleText);
+
+        // 修复1：position: fixed/sticky 在 foreignObject 里定位错乱，转 relative 跟随文档流
+        var pos = cs.getPropertyValue('position');
+        if (pos === 'fixed' || pos === 'sticky') {
+          dst.style.position = 'relative';
+        }
+
+        // 修复2：overflow 不为 visible 会裁剪内容，整页截图需要全部可见
+        if (cs.getPropertyValue('overflow-y') !== 'visible') dst.style.overflowY = 'visible';
+        if (cs.getPropertyValue('overflow-x') !== 'visible') dst.style.overflowX = 'visible';
+
+        // 修复3：SVG 元素的 fill/stroke 等属性可能写着 var(--accent)，
+        // foreignObject 里没有 :root 变量，用计算样式的实际值覆盖
+        if (src.namespaceURI === 'http://www.w3.org/2000/svg') {
+          SVG_PRESENTATION_ATTRS.forEach(function (prop) {
+            var val = cs.getPropertyValue(prop);
+            if (val && val !== 'none' && val !== '') dst.setAttribute(prop, val);
+          });
+        }
+      }
+
       var n = src.children.length;
       // 先按原结构递归子元素（此时 dst 尚未插入伪元素，索引一一对应）
       for (var i = 0; i < n; i++) walk(src.children[i], dst.children[i]);
