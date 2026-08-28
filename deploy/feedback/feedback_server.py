@@ -5,28 +5,30 @@ feedback_server.py · 标准术语「反馈收集服务」（零第三方依赖�
 
 路由：
   POST /feedback/            接收前端反馈（JSON：page/title/desc/contact/shot）
-  GET  /feedback/files/<name> 查看已保存的截图（email 里的链接会指向这里）
+  GET  /feedback/files/<name> 查看历史截图（兼容旧数据，新反馈不再存盘）
 
 行为：
-  1. 校验并保存截图（JPEG/PNG）到 storage_dir，文件名随机
-  2. 追加一条记录到 storage_dir/records.jsonl
-  3. 通过 SMTP（QQ 邮箱等）发送通知邮件，正文含页面 / 描述 / 联系方式 / 截图链接
-  4. 防护：单 IP 限频、请求体大小上限、描述长度上限、总存储配额、旧文件自动清理
+  1. 截图 base64 解码后直接内嵌到邮件（CID inline），不写磁盘
+  2. 追加一条文本记录到 storage_dir/records.jsonl（不含图片）
+  3. 通过 SMTP 发送 HTML 邮件，正文含页面 / 描述 / 联系方式 + 内联截图
+  4. 防护：单 IP 限频、请求体大小上限、描述长度上限、截图 base64 上限
 
 配置：同目录 feedback_config.json（模板见 feedback_config.example.json）
 用法：python3 feedback_server.py [端口]   # 默认 8899，仅监听 127.0.0.1
 """
 import base64
+import html
 import json
 import os
-import random
 import re
 import ssl
 import smtplib
-import string
 import sys
 import time
-from email.message import EmailMessage
+import uuid
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+from email.mime.image import MIMEImage
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import unquote, urlparse
 
@@ -39,14 +41,12 @@ DEFAULT_CONFIG = {
     "sender": "",          # 发信邮箱（QQ 邮箱）
     "auth_code": "",       # SMTP 授权码（非登录密码）
     "to": "",              # 收信邮箱（可多个，逗号分隔）
-    "storage_dir": os.path.join(BASE, 'feedback_data'),  # 截图与记录存放目录
-    "base_url": "http://127.0.0.1:8899",  # 生成截图链接用的域名前缀
+    "storage_dir": os.path.join(BASE, 'feedback_data'),  # 仅存 records.jsonl
+    "base_url": "http://127.0.0.1:8899",  # 兼容旧截图链接
     "max_body": 6 * 1024 * 1024,    # 单请求体上限（字节）
-    "max_shot": 2 * 1024 * 1024,    # 单张截图 base64 上限（字节）——视口截图较小，2MB 足够
+    "max_shot": 3 * 1024 * 1024,    # 单张截图 base64 上限（字节）—— 内嵌邮件不宜过大
     "per_ip_limit": 5,              # 单 IP 时间窗内最多提交次数
     "per_ip_window": 3600,          # 限频时间窗（秒）
-    "max_storage_mb": 200,           # 截图总存储配额（MB），超过则删除最旧的文件
-    "shot_ttl_days": 30,             # 截图保留天数，超过自动删除
 }
 
 
@@ -67,7 +67,6 @@ def load_config():
 CFG = load_config()
 
 _IP_HITS = {}
-_LAST_CLEANUP = 0  # 上次清理时间戳，避免每次提交都扫目录
 
 
 def throttled(ip):
@@ -80,90 +79,59 @@ def throttled(ip):
     return False
 
 
-def rand_name():
-    return 'fd_' + ''.join(random.choice(string.hexdigits.lower()) for _ in range(16))
+def build_html(page, title, desc, contact, has_shot):
+    """生成 HTML 邮件正文，用户输入均转义防注入。"""
+    rows = []
+    rows.append('<p><b>页面：</b>%s</p>' % html.escape(page or '(未知)'))
+    if title:
+        rows.append('<p><b>页面标题：</b>%s</p>' % html.escape(title))
+    rows.append('<p><b>问题描述：</b></p>')
+    rows.append('<div style="background:#f7f5f0;padding:12px 16px;border-radius:8px;'
+                'border-left:3px solid #0e6b5b;white-space:pre-wrap;word-break:break-all;">%s</div>'
+                % html.escape(desc))
+    if contact:
+        rows.append('<p><b>联系方式：</b>%s</p>' % html.escape(contact))
+    if has_shot:
+        cid = uuid.uuid4().hex
+        rows.append('<p><b>截图：</b></p>')
+        rows.append('<img src="cid:%s" alt="screenshot" style="max-width:100%%;'
+                    'border-radius:8px;border:1px solid #e2dccd;">' % cid)
+    else:
+        cid = None
+    body = '''<!DOCTYPE html><html><head><meta charset="utf-8"></head>
+<body style="font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
+color:#2d2a24;line-height:1.7;max-width:680px;margin:0 auto;padding:20px;">
+<h2 style="color:#0e6b5b;margin-top:0;">标准术语 · 用户反馈</h2>
+%s
+<hr style="border:none;border-top:1px solid #e2dccd;margin:24px 0;">
+<p style="color:#999;font-size:12px;">来自 standard-term 反馈系统 · %s</p>
+</body></html>''' % (''.join(rows), time.strftime('%Y-%m-%d %H:%M:%S'))
+    return body, cid
 
 
-def cleanup_storage():
-    """清理过期截图 + 总存储超配额时删最旧的文件。每 10 分钟最多跑一次。"""
-    global _LAST_CLEANUP
-    now = time.time()
-    if now - _LAST_CLEANUP < 600:  # 10 分钟内不重复清理
-        return
-    _LAST_CLEANUP = now
-
-    storage = CFG['storage_dir']
-    if not os.path.isdir(storage):
-        return
-
-    # 收集所有截图文件（不含 records.jsonl）
-    files = []
-    for name in os.listdir(storage):
-        if re.fullmatch(r'fd_[0-9a-f]{16}\.(jpg|png)', name):
-            fp = os.path.join(storage, name)
-            try:
-                st = os.stat(fp)
-                files.append((fp, st.st_mtime, st.st_size))
-            except OSError:
-                pass
-
-    # 1) 删超过 TTL 的旧文件
-    ttl = CFG['shot_ttl_days'] * 86400
-    deleted = 0
-    for fp, mtime, _ in files:
-        if now - mtime > ttl:
-            try:
-                os.remove(fp)
-                deleted += 1
-            except OSError:
-                pass
-    if deleted:
-        print('[cleanup] 已删除 %d 个超过 %d 天的截图' % (deleted, CFG['shot_ttl_days']))
-
-    # 2) 总存储超配额时，按修改时间从旧到新删，直到低于配额的 80%
-    quota = CFG['max_storage_mb'] * 1024 * 1024
-    # 重新统计剩余文件
-    remaining = []
-    total = 0
-    for name in os.listdir(storage):
-        if re.fullmatch(r'fd_[0-9a-f]{16}\.(jpg|png)', name):
-            fp = os.path.join(storage, name)
-            try:
-                st = os.stat(fp)
-                remaining.append((fp, st.st_mtime, st.st_size))
-                total += st.st_size
-            except OSError:
-                pass
-
-    if total > quota:
-        remaining.sort(key=lambda x: x[1])  # 最旧的在前
-        target = quota * 0.8  # 降到配额的 80% 以下
-        freed = 0
-        for fp, _, size in remaining:
-            if total - freed <= target:
-                break
-            try:
-                os.remove(fp)
-                freed += size
-            except OSError:
-                pass
-        if freed:
-            print('[cleanup] 存储超配额(%.1fMB > %dMB)，已删除最旧截图释放 %.1fMB' % (
-                total / 1048576, CFG['max_storage_mb'], freed / 1048576))
-
-
-def send_mail(subject, text):
+def send_mail(subject, page, title, desc, contact, shot_bytes=None, shot_ext='jpg'):
+    """发送 HTML 邮件，截图以 CID 内联方式嵌入（不落盘）。"""
     cfg = CFG
     if not (cfg['sender'] and cfg['auth_code'] and cfg['to']):
         return False, 'SMTP 未配置（feedback_config.json）'
-    msg = EmailMessage()
+
+    html_body, cid = build_html(page, title, desc, contact, shot_bytes is not None)
+
+    msg = MIMEMultipart('related')
     msg['From'] = cfg['sender']
     msg['To'] = cfg['to']
     msg['Subject'] = subject
-    msg.set_content(text)
+    msg.attach(MIMEText(html_body, 'html', 'utf-8'))
+
+    if shot_bytes and cid:
+        img = MIMEImage(shot_bytes, _subtype=shot_ext)
+        img.add_header('Content-ID', '<%s>' % cid)
+        img.add_header('Content-Disposition', 'inline', filename='screenshot.%s' % shot_ext)
+        msg.attach(img)
+
     ctx = ssl.create_default_context()
     try:
-        with smtplib.SMTP_SSL(cfg['smtp_host'], int(cfg['smtp_port']), timeout=20, context=ctx) as s:
+        with smtplib.SMTP_SSL(cfg['smtp_host'], int(cfg['smtp_port']), timeout=25, context=ctx) as s:
             s.login(cfg['sender'], cfg['auth_code'])
             s.send_message(msg)
         return True, 'ok'
@@ -192,6 +160,7 @@ class Handler(BaseHTTPRequestHandler):
         self.wfile.write(data)
 
     def _serve_file(self, name):
+        """兼容旧截图文件（新反馈不再存盘，仅历史数据可能存在）。"""
         name = os.path.basename(unquote(name))
         if not re.fullmatch(r'fd_[0-9a-f]{16}\.(jpg|png)', name):
             return self._send_json(404, {'ok': False, 'error': 'not found'})
@@ -248,58 +217,39 @@ class Handler(BaseHTTPRequestHandler):
         if len(desc) > 2000:
             return self._send_json(400, {'ok': False, 'error': '描述过长'})
 
-        # 确保存储目录存在（运行期间被清理后也能自动重建，避免写记录崩溃）
-        os.makedirs(CFG['storage_dir'], exist_ok=True)
-
-        # 保存截图前先触发清理（过期删除 + 配额控制），每 10 分钟最多实际执行一次
-        cleanup_storage()
-
-        # 保存截图
-        shot_file = None
-        shot_url = ''
+        # 截图解码到内存（不写磁盘），超限则不带截图
+        shot_bytes = None
+        shot_ext = 'jpg'
         if shot and len(shot) <= CFG['max_shot']:
             m = re.match(r'^data:image/(jpeg|png);base64,(.+)$', shot, re.S)
             if m:
                 try:
-                    raw = base64.b64decode(m.group(2))
-                    ext = 'jpg' if m.group(1) == 'jpeg' else 'png'
-                    shot_file = rand_name() + '.' + ext
-                    with open(os.path.join(CFG['storage_dir'], shot_file), 'wb') as f:
-                        f.write(raw)
-                    shot_url = CFG['base_url'].rstrip('/') + '/feedback/files/' + shot_file
+                    shot_bytes = base64.b64decode(m.group(2))
+                    shot_ext = 'jpg' if m.group(1) == 'jpeg' else 'png'
                 except Exception:
-                    shot_file = None
+                    shot_bytes = None
 
-        # 落盘记录
+        # 落盘文本记录（不含图片）
+        os.makedirs(CFG['storage_dir'], exist_ok=True)
         rec = {
             'ts': time.strftime('%Y-%m-%d %H:%M:%S'),
             'ip': ip, 'page': page, 'title': title,
-            'desc': desc, 'contact': contact, 'shot': shot_file,
+            'desc': desc, 'contact': contact, 'has_shot': shot_bytes is not None,
         }
         with open(os.path.join(CFG['storage_dir'], 'records.jsonl'), 'a', encoding='utf-8') as f:
             f.write(json.dumps(rec, ensure_ascii=False) + '\n')
 
-        # 发邮件
+        # 发邮件（截图内联）
         subject = ('[标准术语反馈] ' + (page or '未知页面'))[:100]
-        lines = ['页面: ' + (page or '(未知)')]
-        if title:
-            lines.append('页面标题: ' + title)
-        lines.append('')
-        lines.append('问题描述:')
-        lines.append(desc)
-        if contact:
-            lines.append('')
-            lines.append('联系方式: ' + contact)
-        if shot_url:
-            lines.append('')
-            lines.append('截图: ' + shot_url)
-        ok, err = send_mail(subject, '\n'.join(lines))
+        ok, err = send_mail(subject, page, title, desc, contact, shot_bytes, shot_ext)
 
-        print('[feedback] %s %s page=%s ok=%s' % (rec['ts'], ip, page, ok))
+        print('[feedback] %s %s page=%s shot=%sKB mail=%s' % (
+            rec['ts'], ip, page,
+            ('%d' % (len(shot_bytes) // 1024)) if shot_bytes else 'none',
+            'ok' if ok else 'fail'))
         return self._send_json(200, {
             'ok': ok,
-            'saved': bool(shot_file),
-            'shot': shot_url or None,
+            'shot_inline': shot_bytes is not None,
             'mail': 'ok' if ok else ('fail:' + err),
         })
 
@@ -308,8 +258,7 @@ def main():
     port = int(sys.argv[1]) if len(sys.argv) > 1 else 8899
     srv = ThreadingHTTPServer(('127.0.0.1', port), Handler)
     print('feedback server → http://127.0.0.1:%d/feedback/' % port)
-    print('storage     → %s' % CFG['storage_dir'])
-    print('quota       → %dMB total, %d days TTL' % (CFG['max_storage_mb'], CFG['shot_ttl_days']))
+    print('storage     → %s (仅 records.jsonl，截图内联邮件不落盘)' % CFG['storage_dir'])
     print('smtp        → %s:%s to=%s' % (CFG['smtp_host'], CFG['smtp_port'], CFG['to'] or '(未配置)'))
     try:
         srv.serve_forever()
