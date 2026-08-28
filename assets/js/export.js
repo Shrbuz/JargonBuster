@@ -68,9 +68,22 @@
     return dstRoot;
   }
 
-  /* 把 HTML 字符串中未转义的 & 转成 &amp;（SVG 是严格 XML，未转义 & 会解析失败） */
+  /* HTML 空元素（void element）列表：outerHTML 不闭合它们，但 SVG(XML) 要求闭合 */
+  var VOID_TAGS = 'area|base|br|col|embed|hr|img|input|link|meta|param|source|track|wbr';
+  var VOID_REGEX = new RegExp('<(' + VOID_TAGS + ')([\\s\\S]*?)>', 'gi');
+
+  /* 把 HTML 字符串中未转义的 & 转成 &amp;（SVG 是严格 XML） */
   function escapeAmp(html) {
     return html.replace(/&(?!(?:amp|lt|gt|quot|apos|#\d+|#x[0-9a-fA-F]+);)/g, '&amp;');
+  }
+
+  /* 把空元素自闭合：<input ...> → <input .../>，避免 XML 解析失败 */
+  function selfCloseVoid(html) {
+    return html.replace(VOID_REGEX, function (match, tag, attrs) {
+      // 已经是自闭合 <tag .../> 就不动
+      if (attrs.charAt(attrs.length - 1) === '/') return match;
+      return '<' + tag + attrs + '/>';
+    });
   }
 
   /**
@@ -110,10 +123,12 @@
       var clone = buildClone(node);
       console.log(LOG, '②克隆完成', {耗时ms: Date.now() - t0, 克隆子元素数: clone.querySelectorAll('*').length});
       // 显式尺寸放到样式串末尾，确保覆盖计算样式里的 width/height
-      clone.setAttribute('style', (clone.getAttribute('style') || '') + ';width:' + w + 'px;height:' + h + 'px;');
+      var existingStyle = clone.getAttribute('style') || '';
+      clone.setAttribute('style', existingStyle + (existingStyle ? ';' : '') + 'width:' + w + 'px;height:' + h + 'px;');
 
-      // 关键：转义未转义的 &，否则 SVG(XML) 解析失败
-      var html = escapeAmp(clone.outerHTML);
+      // 关键三步：转义 & → 空元素自闭合 → 才能塞进 SVG(XML)
+      var html = selfCloseVoid(escapeAmp(clone.outerHTML));
+      console.log(LOG, '②③HTML预处理完成', { html字节数: html.length });
 
       var svg =
         '<svg xmlns="http://www.w3.org/2000/svg" width="' + w + '" height="' + h + '">' +
@@ -146,7 +161,6 @@
       };
       img.onerror = function (e) {
         console.error(LOG, '④图片加载失败(SVG渲染失败)', {耗时ms: Date.now() - t1, event: e});
-        // 打出 SVG 前 3000 字符，便于定位具体哪段 HTML 导致解析失败
         console.error(LOG, '失败SVG前3000字符:\n', svg.substring(0, 3000));
         reject(new Error('SVG 渲染失败'));
       };
