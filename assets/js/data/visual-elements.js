@@ -131,7 +131,10 @@
           demo: 'statistic' },
         { id: 'masonry', name: '瀑布流', en: 'Masonry / Waterfall', aliases: ['瀑布流布局', '卡片流'],
           desc: '列宽固定、卡片高度不定的多列布局，新卡片总是填进最短的列，图片高矮不一时也不会出现大片空洞。图片社区与电商推荐流的标配。',
-          demo: 'masonry' }
+          demo: 'masonry' },
+        { id: 'social-proof', name: '社会证明', en: 'Social Proof', aliases: ['用户评价', '口碑区', '信任背书'],
+          desc: '用「别人都信它」说服访客的版块族：用户数、客户 Logo 墙、星级与真实好评卡。官网落地页的标配；数字必须真实可查，编出来的信任感塌得更快。',
+          demo: 'social-proof' }
       ]
     },
     {
@@ -171,6 +174,9 @@
       id: 'overlay', name: '浮层', en: 'Overlays',
       desc: '浮在页面之上、暂时接管注意力的层级。用得克制是体验，用得泛滥是灾难。',
       items: [
+        { id: 'overlay', name: '遮罩层', en: 'Overlay / Scrim', aliases: ['蒙层', '遮罩', '幕布'],
+          desc: '盖在页面上的半透明暗层，负责把注意力「压」给浮层：它一出现，下面的内容就暂时失焦。点遮罩能否关闭、遮罩压得多深，是每个弹窗都要回答的两个问题。',
+          demo: 'overlay' },
         { id: 'modal', name: '模态框', en: 'Modal / Dialog', aliases: ['弹窗', '对话框'],
           desc: '带遮罩、居中、强制用户先处理的浮层：确认危险操作、完成必填小流程。加遮罩不可透点，Esc/点遮罩可关闭。',
           demo: 'modal', term: 'modal' },
@@ -186,6 +192,9 @@
         { id: 'carousel', name: '轮播', en: 'Carousel', aliases: ['走马灯', '幻灯片'],
           desc: '横向循环切换的多张内容卡：首页 Banner、推荐位。自动播放要可在悬停时暂停，配指示点与切换箭头。',
           demo: 'carousel', term: 'carousel' },
+        { id: 'marquee', name: '跑马灯', en: 'Marquee', aliases: ['滚动字幕', '无缝滚动', '滚动公告'],
+          desc: '内容沿一个方向匀速滚动、首尾无缝衔接的长条：公告栏、弹幕、股票行情。与轮播的区别：轮播一屏一张定时切换，跑马灯永不停滑也不聚焦——重要公告别用它，用户来不及读。',
+          demo: 'marquee', term: 'marquee' },
         { id: 'bottom-sheet', name: '底部动作面板', en: 'Bottom Sheet / Action Sheet', aliases: ['底部弹层', '动作面板', '半屏弹窗'],
           desc: '从屏幕底部升起的面板：一列动作选项（取消惯例单独一行、加粗），或承载半屏内容。移动端用它替代桌面上的下拉菜单和右键菜单。',
           demo: 'bottom-sheet' },
@@ -209,7 +218,73 @@
           demo: 'video' },
         { id: 'upload', name: '文件上传', en: 'Upload', aliases: ['拖拽上传', '附件上传'],
           desc: '上传交互三件套：拖拽/点击选择区、已上传文件行（名称+大小+删除）、上传中进度。要约定格式与大小限制。',
-          demo: 'upload' }
+          demo: 'upload' },
+        { id: 'favicon', name: '网站图标', en: 'Favicon', aliases: ['站点图标', '标签页图标', '收藏夹图标'],
+          desc: '浏览器标签页、收藏夹、历史记录里代表网站的方寸小图。16px 里也要认得出，只留最简图形或首字母；没有它，一堆标签页里你的网站就是灰色地球一枚。',
+          demo: 'favicon', term: 'favicon' }
+      ]
+    },
+    {
+      id: 'layout', name: '布局', en: 'Layout',
+      desc: '决定元素「怎么排」的底层手法。组件是砖，布局是砌法——砌法说清楚，页面骨架就不会歪。',
+      items: [
+        { id: 'flexbox', name: '弹性布局', en: 'Flexbox', aliases: ['弹性盒', 'flex', '伸缩布局'],
+          desc: '一维排布的总管：一行（或一列）里怎么分、怎么对齐、怎么换行都由它决定。说「这几个均匀分布」「按钮靠右」，就是在要 flex。只管一个方向，横竖同时对齐请用 Grid。',
+          demo: 'flexbox', term: 'flex-grid' },
+        { id: 'grid', name: '网格布局', en: 'Grid Layout', aliases: ['网格', '栅格', 'grid'],
+          desc: '二维布局手法：先划好行与列，再把内容填进格子，还能整行整列地跨。仪表盘、图片墙这类「横竖都要对齐」的版面用它。与 Flexbox 分工：一维用 flex，二维用 grid。',
+          demo: 'grid', term: 'flex-grid' },
+        { id: 'whitespace', name: '留白', en: 'Whitespace', aliases: ['负空间', '间距', '呼吸感'],
+          desc: '元素之间与四周的空。留白不是浪费，是阅读的节奏：内容太挤 = 全都在喊 = 什么都听不清。「多留点白」「加点呼吸感」，指的就是放大间距、减少密度。',
+          demo: 'whitespace' },
+        { id: 'responsive', name: '响应式', en: 'Responsive', aliases: ['自适应', '响应式布局', '多端适配'],
+          desc: '同一页面随屏幕宽度自动换形态：宽屏三栏、平板两栏、手机单栏。切换的宽度阈值叫断点，768 / 1024 是常用档位。给 AI 说清设计稿基准与断点，适配才不会跑偏。',
+          demo: 'responsive', term: 'responsive-design' },
+        { id: 'sticky', name: '吸顶与固定定位', en: 'Sticky / Fixed', aliases: ['吸顶', '固定定位', '粘性定位'],
+          desc: '滚动时钉住不走的元素：导航滚过一段才钉住是 sticky，返回顶部按钮常驻角落是 fixed。两者都浮在内容之上，记得给被挡住的区域留出补偿。',
+          demo: 'sticky', term: 'position' }
+      ]
+    },
+    {
+      id: 'effects', name: '视觉技法', en: 'Visual Effects',
+      desc: '给界面上质感的涂料与工艺。名字对上了，想要的那口「气质」才调得出来。',
+      items: [
+        { id: 'gradient', name: '渐变', en: 'Gradient', aliases: ['线性渐变', '径向渐变', '锥形渐变', '渐变色', '渐变文字'],
+          desc: '颜色之间的平滑过渡：线性沿一个方向、径向从中心晕开、锥形绕轴旋转；用在背景、按钮、文字上都行。说「加个渐变」务必带上方向和两端颜色，否则 AI 只能自由发挥。',
+          demo: 'gradient', term: 'gradient' },
+        { id: 'gradient-overlay', name: '渐变遮罩', en: 'Gradient Overlay', aliases: ['压字渐变', '蒙版', '暗角', '边缘羽化'],
+          desc: '压在图片上的一层渐变：底部压深渐变保白字可读是最常见用法；四周压暗叫暗角，边缘渐隐叫羽化——同一技法的三种用法。图上配字看不清，就加它。',
+          demo: 'gradient-overlay' },
+        { id: 'glassmorphism', name: '毛玻璃', en: 'Glassmorphism', aliases: ['磨砂玻璃', '玻璃拟态', 'frosted glass'],
+          desc: '半透明底加背景模糊的玻璃质感（backdrop-filter: blur），iOS 控制中心同款。花哨背景上要保可读，它是首选；模糊有渲染成本，点缀用，别整页铺。',
+          demo: 'glassmorphism' },
+        { id: 'opacity', name: '透明度', en: 'Opacity', aliases: ['不透明度', '半透明', 'alpha', 'rgba'],
+          desc: '元素的透与不透：100% 全实、70% 微透、40% 明显退后。禁用态置灰、遮罩压暗、阴影过渡都靠它。想让内容「退后但不消失」，调这个。',
+          demo: 'opacity', term: 'opacity' },
+        { id: 'accent-color', name: '强调色', en: 'Accent Color', aliases: ['主题色', '主色', '品牌色'],
+          desc: '界面里出现最频繁、代表身份的那种颜色：主按钮、选中态、链接都用它，是整套配色的锚。一屏一个强调色足够，处处强调等于没有强调。',
+          demo: 'accent-color' },
+        { id: 'dark-mode', name: '暗色模式', en: 'Dark Mode', aliases: ['深色模式', '夜间模式', '暗黑模式'],
+          desc: '整套配色的夜间形态。不是把背景翻黑：底色分层、文字降灰、阴影加深、主色提亮都要重校。页头的主题开关就是活例子——切过去看看这个图鉴的变化。',
+          demo: 'dark-mode', term: 'dark-mode' }
+      ]
+    },
+    {
+      id: 'motion', name: '动效', en: 'Motion',
+      desc: '让界面「动起来」的四种基本手法。动效是反馈不是炫技：快、克制、可关闭。',
+      items: [
+        { id: 'hover-effect', name: '悬停效果', en: 'Hover Effect', aliases: ['悬停态', 'hover 态', '悬浮效果'],
+          desc: '鼠标悬停时的即时变化：变色、抬升、阴影加深，告诉用户「这个可以点」。桌面端标配；移动端没有 hover，别把关键信息只放在悬停里。',
+          demo: 'hover-effect', term: 'interactive-states' },
+        { id: 'transition', name: '过渡', en: 'Transition', aliases: ['过渡动画', '缓动', '补间'],
+          desc: '状态 A 到 B 之间的平滑过程，150-250ms 为宜。没有过渡，变化生硬像出了 bug；过渡太长，页面拖沓。说「加个过渡别太生硬」，就是在要它。',
+          demo: 'transition', term: 'css-transition' },
+        { id: 'entrance-animation', name: '入场动画', en: 'Entrance Animation', aliases: ['进场动画', '浮现动画', '入场动效'],
+          desc: '内容出现时的登场方式：淡入、上浮、依次错峰出现，让页面是「布置好」的而不是「糊一脸」的。时长克制、只进不弹；本页元素滚动到眼前时依次浮现，用的就是它。',
+          demo: 'entrance-animation' },
+        { id: 'pulse-animation', name: '脉冲动画', en: 'Pulse Animation', aliases: ['呼吸灯', '呼吸点', '脉冲点'],
+          desc: '向外扩散波纹的呼吸循环：直播 LIVE 点、录制中、在线状态都靠它传递「活着」的信号。一页放两三处是氛围，处处都闪就成了警报器。',
+          demo: 'pulse-animation' }
       ]
     }
   ];

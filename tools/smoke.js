@@ -119,6 +119,8 @@ if (D) {
   }
   const nb = D.neighborsOf(D.termMap.get('api'));
   assert(nb.next && nb.next.cat === 'backend', '相邻词条计算正常');
+
+  assert(['favicon', 'gradient', 'opacity', 'marquee'].every(id => D.termMap.has(id)), '新增 favicon/渐变/透明度/跑马灯 4 条词条已注册');
 }
 
 /* ---------- 前端可视化标准术语 ---------- */
@@ -127,8 +129,9 @@ try {
   const VG = W.STD_VISUAL_GROUPS || [];
   const VD = W.STD_VISUAL_DEMOS || {};
   const allItems = VG.flatMap(g => g.items);
-  assert(VG.length >= 6, '图鉴分组 >= 6（实际 ' + VG.length + '）');
-  assert(allItems.length >= 50, '图鉴元素 >= 50（实际 ' + allItems.length + '）');
+  assert(VG.length === 10, '图鉴分组 = 10（实际 ' + VG.length + '）');
+  assert(['layout', 'effects', 'motion'].every(id => VG.some(g => g.id === id)), '新增布局/视觉技法/动效三组已注册');
+  assert(allItems.length === 73, '图鉴元素 = 73（实际 ' + allItems.length + '）');
   const noDemo = allItems.filter(it => typeof VD[it.demo] !== 'function');
   assert(noDemo.length === 0, '每个元素都有呈现效果示例' + (noDemo.length ? '（缺失: ' + noDemo.map(i => i.id).join(',') + '）' : ''));
   const badItem = allItems.find(it => !it.name || !it.en || !it.desc || !it.id);
@@ -136,15 +139,23 @@ try {
 
   const idx = W.STD_VIEWS.visuals();
   assert(idx.html.includes('前端可视化标准术语'), '图鉴总览页可渲染');
+  assert(idx.html.includes('视觉技法'), '总览页含视觉技法分组');
   const grp = W.STD_VIEWS.visualGroup('basics');
   assert(grp && (grp.html.match(/class="vs-item"/g) || []).length === 8, '分组页渲染 8 个基础元素区块');
+  const layoutGrp = W.STD_VIEWS.visualGroup('layout');
+  assert(layoutGrp && (layoutGrp.html.match(/class="vs-item"/g) || []).length === 5, '布局组渲染 5 个元素区块');
   assert(W.STD_VIEWS.visualGroup('nope') === null, '未知分组安全返回空');
 
   const vsHit = W.STD_SEARCH.searchVisuals('走马灯');
   assert(vsHit.length >= 1 && vsHit[0].item.id === 'carousel', '图鉴搜索「走马灯」命中轮播');
   assert(W.STD_SEARCH.searchVisuals('Toggle').some(r => r.item.id === 'switch'), '图鉴搜索英文别名 Toggle 命中开关');
+  assert(W.STD_SEARCH.searchVisuals('毛玻璃').some(r => r.item.id === 'glassmorphism'), '图鉴搜索「毛玻璃」命中毛玻璃');
+  assert(W.STD_SEARCH.searchVisuals('跑马灯')[0].item.id === 'marquee', '图鉴搜索「跑马灯」命中跑马灯（区别于轮播）');
+  assert(W.STD_SEARCH.searchVisuals('羽化').some(r => r.item.id === 'gradient-overlay'), '图鉴搜索「羽化」命中渐变遮罩');
   const termBtn = W.STD_VIEWS.term('button');
   assert(termBtn && termBtn.html.includes('#/visuals/basics/button'), '词条详情页含图鉴反链');
+  const termGrad = W.STD_VIEWS.term('gradient');
+  assert(termGrad && termGrad.html.includes('#/visuals/effects/gradient'), '渐变词条含图鉴反链');
 
   W.location.hash = '#/visuals/basics/button';
   const r = W.STD_ROUTER.parseHash();

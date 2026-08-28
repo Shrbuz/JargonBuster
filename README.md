@@ -9,7 +9,7 @@
 并为必要概念配了 **SVG 图解** 与 **可播放的 CSS 动画**。
 
 ![License](https://img.shields.io/github/license/Shrbuz/JargonBuster)
-![词条](https://img.shields.io/badge/词条-444-brightgreen)
+![词条](https://img.shields.io/badge/词条-448-brightgreen)
 ![零构建](https://img.shields.io/badge/构建-零依赖-ff69b4.svg)
 ![纯前端](https://img.shields.io/badge/前端-vanilla--js-4a90d9.svg)
 [![GitHub stars](https://img.shields.io/github/stars/Shrbuz/JargonBuster?style=flat)](https://github.com/Shrbuz/JargonBuster)
@@ -34,9 +34,9 @@
 ## 特性
 
 - **纯静态零构建**：无框架、无依赖、无打包，`git pull` 即部署
-- **十大分类 × 444 词条**：编程基础 / 数据结构与算法 / 前端 / 后端 / 数据库 / 网络协议 / Git 协作 / 工程实践 / 架构设计 / AI 与大模型
+- **十大分类 × 448 词条**：编程基础 / 数据结构与算法 / 前端 / 后端 / 数据库 / 网络协议 / Git 协作 / 工程实践 / 架构设计 / AI 与大模型
 - **全站搜索**：中文、English、别名、标签、正文全文匹配，图鉴元素一并命中；`/` 聚焦，`↑↓` 选择，`Enter` 跳转
-- **可视化标准术语图鉴**：网页与 App 常见界面元素按「基础 / 表单 / 导航 / 数据展示 / 反馈 / 浮层 / 媒体」分组，每个元素 = 标准名与别名 + 一句话描述 + 真实呈现标本；搜「走马灯」直达轮播，词条页与图鉴双向互链
+- **可视化标准术语图鉴**：网页与 App 常见界面元素按「基础 / 表单 / 导航 / 数据展示 / 反馈 / 浮层 / 媒体 / 布局 / 视觉技法 / 动效」分组，每个元素 = 标准名与别名 + 一句话描述 + 真实呈现标本；搜「走马灯」直达轮播、搜「毛玻璃」直达毛玻璃，词条页与图鉴双向互链
 - **学习路线**：循序渐进的路径把散落词条串起来，含 UI 沟通速查线
 - **学习进度与收藏**：localStorage 本地记录「已掌握」，分类进度条可视化
 - **图示与动画**：27 张手绘 SVG 图解随主题变色；20 个循环概念动画可暂停重播

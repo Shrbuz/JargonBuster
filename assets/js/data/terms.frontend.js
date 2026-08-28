@@ -1765,6 +1765,34 @@
   },
 
   {
+    id: 'marquee',
+    en: 'Marquee',
+    zh: '跑马灯',
+    cat: 'frontend',
+    tags: ['UI 组件', '动效'],
+    level: 'common',
+    summary: '内容匀速循环滚动的长条（不是滚动条，也不是轮播）：公告栏、弹幕、行情条。',
+    plain: [
+      '跑马灯（Marquee）指内容沿一个方向匀速滚动、首尾无缝衔接的长条：网站公告、直播间弹幕、股票行情条都是它。现代实现是一条「内容 ×2」的轨道做 CSS 平移动画，不再用已淘汰的 <marquee> 标签。',
+      '命名澄清三家店：轮播（Carousel）一屏一张、手动或定时切换；跑马灯匀速不停滑、不打断不聚焦；滚动条（Scrollbar）是屏幕边缘的拖动条，和它没关系——有人说「滚动条动画」，八成想说的就是跑马灯。',
+      '使用纪律：只放扫一眼就读完的短信息；重要公告别用它（用户来不及读）；配 hover 暂停与 prefers-reduced-motion 降级。给 AI 的句式：「公告跑马灯：无缝循环匀速 20s 一轮，hover 暂停，两端渐隐遮罩」。'
+    ],
+    analogy: '跑马灯像机场航站楼的滚动航班屏：匀速滑过、循环往复，扫一眼就够；重要登机口变更靠广播（通知），不靠它。',
+    talk: {
+      good: [
+        '顶部公告跑马灯：无缝循环，hover 暂停，用户开启减少动效时改为静态展示第一条。'
+      ],
+      bad: [
+        { say: '做个滚动条动画', why: '大概率想说的是跑马灯；照字面做成滚动条样式就南辕北辙了。' }
+      ]
+    },
+    misconceptions: [
+      '跑马灯就是轮播？轮播整屏切换、有指示点；跑马灯匀速滚动、画面永不切换，交互预期完全不同。'
+    ],
+    related: ['carousel', 'banner']
+  },
+
+  {
     id: 'banner',
     en: 'Banner',
     zh: '横幅',
@@ -3648,6 +3676,95 @@
       'inline 元素能设 margin 和 padding？水平方向可以，垂直方向和宽高不行。'
     ],
     related: ['css-box-model', 'css-inheritance', 'flex-grid']
+  },
+
+  {
+    id: 'gradient',
+    en: 'Gradient',
+    zh: '渐变',
+    aliases: ['线性渐变', '径向渐变', '锥形渐变', '渐变色', '渐变文字', 'linear-gradient', 'radial-gradient'],
+    cat: 'frontend',
+    tags: ['CSS', '视觉'],
+    level: 'common',
+    summary: '颜色间的平滑过渡：linear 沿方向、radial 从中心、conic 绕一圈，背景按钮文字全能用。',
+    plain: [
+      'CSS 渐变本质是「图片」不是「颜色」：在 background 上写 linear-gradient(135deg, #0A5548, #52C3AC)，得到的是一张会随容器伸缩的渐变图。三种基本形态：linear 沿一个方向、radial 从中心晕开（光晕/暗角）、conic 绕轴旋转（饼图/色环）。',
+      '高频应用三件：按钮与 Banner 底色；图片压字遮罩（渐变叠透明色，保白字可读）；渐变文字（background-clip: text 配透明文字色）。实物都在图鉴「渐变」和「渐变遮罩」条目里。',
+      '沟通纪律：说「加个渐变」必须带方向与两端颜色（「左上到右下，深绿到浅绿」），只说「高级感的那种渐变」AI 只能自由发挥。另一个易混词：过渡（transition）是动画过程，渐变（gradient）是颜色形态——说「渐变效果」AI 可能理解成过渡动画。'
+    ],
+    analogy: '渐变像日出：linear 是天边从东到西依次亮起（有方向），radial 是太阳周围一圈圈晕开（有中心），conic 是色带绕着太阳转一整圈（有轴）。',
+    talk: {
+      good: [
+        '主按钮底色用 135 度线性渐变：起点 #0A5548，终点 #52C3AC，hover 两端各加深一档。',
+        'Banner 底图压一层线性渐变：底部 rgba(0,0,0,.6) 渐到透明，保证白色标题可读。'
+      ],
+      bad: [
+        { say: '做个渐变效果', why: '方向、颜色、用在哪都没说；且「渐变」易被理解成过渡动画（transition），要说清是颜色渐变。' }
+      ]
+    },
+    misconceptions: [
+      '渐变很耗性能？静态渐变图几乎零成本；把大面积渐变做成动画（如移动 background-position）才需要掂量。'
+    ],
+    related: ['css-transition', 'interactive-states']
+  },
+
+  {
+    id: 'opacity',
+    en: 'Opacity',
+    zh: '透明度',
+    aliases: ['不透明度', '半透明', 'alpha', 'rgba', '透明色'],
+    cat: 'frontend',
+    tags: ['CSS', '视觉'],
+    level: 'core',
+    summary: '元素的透与不透：100% 全实、40% 退后——禁用置灰、遮罩压暗、阴影过渡全靠它。',
+    plain: [
+      'opacity 取值 0-1：1 全实、0.7 微透、0.4 明显退后。它作用于整个元素（连同文字一起变透）；只想透背景不动文字，用 RGBA/HSLA 颜色的 alpha 位：background: rgba(0,0,0,.5)。十六进制也能带 alpha：#0E6B5B80 末两位 80 约等于 50% 透明。',
+      '常见约定：禁用态整体 40% 透明、弹窗遮罩黑 50%、阴影里的黑色永远带 alpha。这些数值没写进需求时，AI 多半直接不做——主动说。',
+      '两个易踩点：opacity: 0 的元素仍占位、仍拦截点击（要配合 visibility 或 pointer-events:none）；动画 opacity 性能极好（走合成器不触发重排），是少数可以放心做动画的属性。'
+    ],
+    analogy: 'opacity 像玻璃门贴膜：贴整面（opacity）连门上贴的字都半透；只贴玻璃不动字（rgba 的 alpha 位）字依旧清晰。',
+    talk: {
+      good: [
+        '禁用按钮：整体 opacity 0.4，去掉 hover 动效。',
+        '弹窗遮罩：背景 rgba(0,0,0,0.5)，注意弹窗内容不要跟着变透。'
+      ],
+      bad: [
+        { say: '做透明一点', why: '整元素透明还是只透背景（opacity 与 rgba 的分工）、透多少，不说清 AI 只能拍脑袋。' }
+      ]
+    },
+    misconceptions: [
+      'opacity: 0 就是隐藏？元素还在原位占空间、还能接到点击；真隐藏要 display:none 或配合 visibility。'
+    ],
+    related: ['interactive-states', 'display-property']
+  },
+
+  {
+    id: 'favicon',
+    en: 'Favicon',
+    zh: '网站图标',
+    aliases: ['站点图标', '标签页图标', '收藏夹图标'],
+    cat: 'frontend',
+    tags: ['浏览器', '基础概念'],
+    level: 'common',
+    summary: '浏览器标签页上代表网站的小图标：16px 里也要一眼认出你是谁。',
+    plain: [
+      'favicon 出现在浏览器标签页、收藏夹、历史记录和手机主屏上，是网站最小的一张脸。接入只要一行：<link rel="icon" href="/favicon.ico">；现代做法是多尺寸各配一份（16/32 常规 + 180 的 apple-touch-icon），再配一份 SVG 版本自动适配明暗主题。',
+      '设计要点：16px 里也要认得出，只留最简图形或首字母，别把完整 Logo 硬缩进去；文件放站点根目录，浏览器会默认来取。没有它，多标签页工作流里你的网站就是一枚灰色地球，找都找不回。',
+      '给 AI 的句式：「favicon 用首字母 S 白底绿字：SVG 主体 + ico 兜底 + apple-touch-icon 180px，放站点根目录」。'
+    ],
+    analogy: 'favicon 像工牌上的大头照：方寸之间只够放一张脸，放全身照谁也认不出你。',
+    talk: {
+      good: [
+        '补一个 favicon：SVG 主体 + ico 兜底 + apple-touch-icon 180px，图案用现有 Logo 的单色简化版。'
+      ],
+      bad: [
+        { say: '加个网站图标', why: '不说图形与尺寸策略，AI 可能直接塞一张大图，16px 下糊成一团。' }
+      ]
+    },
+    misconceptions: [
+      'favicon 必须是 .ico 文件？现代浏览器支持 PNG/SVG，ico 只是兼容兜底；但根目录放一份 favicon.ico 仍是省心做法。'
+    ],
+    related: ['viewport-meta']
   }
   );
 })(window);

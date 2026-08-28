@@ -378,6 +378,21 @@
     '<p class="vd-help" style="margin-top:8px">列宽固定 · 高度不一 · 新卡片永远填最短的列</p>';
   };
 
+  D['social-proof'] = function () {
+    return '<div class="vd-sp">' +
+      '<div class="vd-sp-stats">' +
+        '<div><b>120 万+</b><span>学习者在用</span></div>' +
+        '<div><b>4.9 分</b><span>平均评分</span></div>' +
+      '</div>' +
+      '<div class="vd-sp-logos"><span>ACME</span><span>NOVA</span><span>HALO</span><span>ORBIT</span><span>QUANT</span></div>' +
+      '<figure class="vd-sp-quote">' +
+        '<span class="vd-avatar" style="width:32px;height:32px;font-size:13px">林</span>' +
+        '<blockquote>术语对齐之后，评审会上终于不用花十分钟解释「那个转来转去的东西」了。</blockquote>' +
+        '<figcaption>林小满 · 产品经理</figcaption>' +
+      '</figure>' +
+    '</div>';
+  };
+
   /* ---------- 反馈 ---------- */
 
   D['alert'] = function () {
@@ -471,6 +486,21 @@
 
   /* ---------- 浮层 ---------- */
 
+  D['overlay'] = function () {
+    function page() {
+      return '<div class="vd-ov-page"><i></i><i></i><i></i><i></i></div>';
+    }
+    return '<div class="vd-ov-row">' +
+      '<figure class="vd-ov"><span class="vd-ov-cap">无遮罩 · 页面还在抢注意力</span>' +
+        '<div class="vd-ov-stage">' + page() + '<div class="vd-ov-dialog">确认删除？<em>取消 / 删除</em></div></div>' +
+      '</figure>' +
+      '<figure class="vd-ov"><span class="vd-ov-cap">有遮罩 · 视线被压给弹窗</span>' +
+        '<div class="vd-ov-stage">' + page() + '<div class="vd-ov-scrim"></div><div class="vd-ov-dialog">确认删除？<em>取消 / 删除</em></div></div>' +
+      '</figure>' +
+    '</div>' +
+    '<p class="vd-help" style="margin-top:8px">点遮罩能否关闭、压到多深——每个弹窗都要回答</p>';
+  };
+
   D['modal'] = function () {
     return '<div class="vd-modal-stage">' +
       '<div class="vd-modal-scrim"></div>' +
@@ -529,6 +559,12 @@
     '</div>';
   };
 
+  D['marquee'] = function () {
+    var text = '公告：可视化图鉴新增 布局 · 视觉技法 · 动效 三个分组 &nbsp;·&nbsp; 术语对齐，沟通不猜谜 &nbsp;·&nbsp; ';
+    return '<div class="vd-marquee"><div class="vd-marquee-track"><span>' + text + '</span><span>' + text + '</span></div></div>' +
+      '<p class="vd-help" style="margin-top:8px">匀速 · 循环 · 不打断 —— 适合公告与行情，不适合需要细读的内容</p>';
+  };
+
   D['bottom-sheet'] = function () {
     return '<div class="vd-sheet-stage">' +
       '<div class="vd-sheet">' +
@@ -582,6 +618,179 @@
         '<span class="vd-list-txt"><b>设计稿-v3.pdf</b><i>2.4 MB · 上传完成</i></span>' +
         '<span class="vd-upfile-del">' + I.x + '</span></div>' +
     '</div>';
+  };
+
+  D['favicon'] = function () {
+    var globe = ic('<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14.5 14.5 0 0 1 0 18M12 3a14.5 14.5 0 0 0 0 18"/>');
+    return '<div class="vd-fav">' +
+      '<div class="vd-fav-tab is-active"><i class="vd-fav-ico">标</i><span>标准术语 · 技术规范用语学习手册</span><em>' + I.x + '</em></div>' +
+      '<div class="vd-fav-tab"><i class="vd-fav-ico is-none">' + globe + '</i><span>没配 favicon 的网站</span><em>' + I.x + '</em></div>' +
+    '</div>' +
+    '<p class="vd-help" style="margin-top:8px">标签页左边的小方块就是它 · 没有它只剩一枚灰色地球</p>';
+  };
+
+  /* ---------- 布局 ---------- */
+
+  D['flexbox'] = function () {
+    function line(justify) {
+      return '<div class="vd-flex-line"><i>' + justify + '</i>' +
+        '<div class="vd-flex-box ' + justify + '"><b></b><b></b><b></b></div></div>';
+    }
+    return '<div class="vd-stack">' +
+      line('is-start') + line('is-center') + line('is-between') +
+      '<p class="vd-help">主轴对齐三连 · 一维排布：行内怎么分、怎么靠，flex 一句话的事</p>' +
+    '</div>';
+  };
+
+  D['grid'] = function () {
+    return '<div class="vd-grid-demo">' +
+      '<span class="is-span">跨 2 列</span><span>A</span>' +
+      '<span>B</span><span>C</span><span>D</span>' +
+    '</div>' +
+    '<p class="vd-help" style="margin-top:8px">先划格子再填内容 · 一格可跨多行多列</p>';
+  };
+
+  D['whitespace'] = function () {
+    function block(cls) {
+      return '<div class="vd-ws ' + cls + '"><b>会员权益</b>' +
+        '<span>专属客服 1 对 1</span><span>每月免费下载 10 次</span><span>线下活动优先报名</span></div>';
+    }
+    return '<div class="vd-ws-row">' +
+      '<figure>' + block('is-tight') + '<figcaption>0 呼吸感：全在喊</figcaption></figure>' +
+      '<figure>' + block('') + '<figcaption>留白：读得进</figcaption></figure>' +
+    '</div>';
+  };
+
+  D['responsive'] = function () {
+    function cards(n) {
+      var s = '';
+      for (var i = 0; i < n; i++) s += '<i></i>';
+      return '<div class="vd-rs-body">' + s + '</div>';
+    }
+    return '<div class="vd-rs-row">' +
+      '<figure class="vd-rs is-desktop">' + cards(3) + '<figcaption>≥ 1024px · 三栏</figcaption></figure>' +
+      '<figure class="vd-rs is-tablet">' + cards(2) + '<figcaption>768–1023 · 两栏</figcaption></figure>' +
+      '<figure class="vd-rs is-phone">' + cards(1) + '<figcaption>&lt; 768 · 单栏</figcaption></figure>' +
+    '</div>' +
+    '<p class="vd-help" style="margin-top:8px">同一页面，断点处自动换形态（768 / 1024 是常用档位）</p>';
+  };
+
+  D['sticky'] = function () {
+    function row(n) {
+      return '<div class="vd-sticky-row"><b>' + n + '</b><span>数据行</span><span>状态正常</span></div>';
+    }
+    return '<div class="vd-sticky-stage">' +
+      '<div class="vd-sticky-scroll">' +
+        '<div class="vd-sticky-head">表头 · 吸顶中</div>' +
+        row(1) + row(2) + row(3) + row(4) + row(5) + row(6) + row(7) +
+      '</div>' +
+      '<span class="vd-sticky-fab">↑ 顶部</span>' +
+    '</div>' +
+    '<p class="vd-help" style="margin-top:8px">中间窗口可以真的滚：表头钉在窗口顶，按钮钉在角落</p>';
+  };
+
+  /* ---------- 视觉技法 ---------- */
+
+  D['gradient'] = function () {
+    return '<div class="vd-grad-row">' +
+      '<figure class="vd-grad is-linear"><figcaption>linear 线性 · 沿方向</figcaption></figure>' +
+      '<figure class="vd-grad is-radial"><figcaption>radial 径向 · 从中心</figcaption></figure>' +
+      '<figure class="vd-grad is-conic"><figcaption>conic 锥形 · 绕一圈</figcaption></figure>' +
+    '</div>' +
+    '<b class="vd-grad-text">Gradient Text 渐变文字</b>' +
+    '<p class="vd-help" style="margin-top:8px">说「渐变」带方向与两端色 · 文字吃色靠 background-clip: text</p>';
+  };
+
+  D['gradient-overlay'] = function () {
+    return '<div class="vd-go-row">' +
+      '<figure class="vd-go"><div class="vd-go-img"></div><div class="vd-go-shade"></div>' +
+        '<figcaption><b>山与湖 · 清晨</b><span>底部压深渐变，白字也可读</span></figcaption></figure>' +
+      '<figure class="vd-go"><div class="vd-go-img"></div><div class="vd-go-shade is-vignette"></div>' +
+        '<figcaption><b>暗角</b><span>四周压暗，视线聚向中心</span></figcaption></figure>' +
+      '<figure class="vd-go"><div class="vd-go-img"></div><div class="vd-go-shade is-feather"></div>' +
+        '<figcaption><b>羽化</b><span>边缘渐隐，融进页面底色</span></figcaption></figure>' +
+    '</div>';
+  };
+
+  D['glassmorphism'] = function () {
+    return '<div class="vd-glass-stage">' +
+      '<i class="vd-glass-blob b1"></i><i class="vd-glass-blob b2"></i><i class="vd-glass-blob b3"></i>' +
+      '<div class="vd-glass-card"><b>毛玻璃卡片</b><span>半透明底 + backdrop-filter: blur(12px)</span></div>' +
+    '</div>';
+  };
+
+  D['opacity'] = function () {
+    function card(op, label, note) {
+      return '<div class="vd-op" style="opacity:' + op + '"><b>' + label + '</b><span>' + note + '</span></div>';
+    }
+    return '<div class="vd-op-row">' +
+      card(1, '100%', '完全实') + card('0.7', '70%', '微透 · 次要') + card('0.4', '40%', '明显退后 · 禁用') +
+    '</div>' +
+    '<p class="vd-help" style="margin-top:8px">退后但不消失 · RGBA 最后一位就是它（0-1）</p>';
+  };
+
+  D['accent-color'] = function () {
+    function col(cls, accentStyle) {
+      return '<div class="vd-ac-col ' + cls + '">' +
+        '<span class="vd-label">' + (cls ? '强调色' : '默认灰') + '</span>' +
+        '<label><input type="checkbox" checked' + accentStyle + '>推送通知</label>' +
+        '<label><input type="radio" name="vd-ac' + (cls ? '-a' : '-b') + '" checked' + accentStyle + '>自动模式</label>' +
+        '<input type="range"' + accentStyle + '>' +
+      '</div>';
+    }
+    return '<div class="vd-ac-row">' + col('', '') + col('is-accent', ' style="accent-color:var(--accent)"') + '</div>' +
+      '<p class="vd-help" style="margin-top:8px">一屏一个强调色 · 原生控件一行 accent-color 即换肤</p>';
+  };
+
+  D['dark-mode'] = function () {
+    return '<div class="vd-dm-row">' +
+      '<div class="vd-dm is-light"><header>Day · 亮色</header><b>本月支出</b><strong>¥ 2,468</strong>' +
+        '<span>底 #FFFDF8 · 文字 #26221B</span></div>' +
+      '<div class="vd-dm is-dark"><header>Night · 暗色</header><b>本月支出</b><strong>¥ 2,468</strong>' +
+        '<span>底 #22262C · 文字 #E8E5DD 非纯白</span></div>' +
+    '</div>' +
+    '<p class="vd-help" style="margin-top:8px">不是反色：底色分层、文字降灰、主色提亮要整套重校</p>';
+  };
+
+  /* ---------- 动效 ---------- */
+
+  D['hover-effect'] = function () {
+    return '<div class="vd-hv-row">' +
+      '<figure class="vd-hv-card"><span class="vd-hv-cap">默认态</span><b>普通卡片</b><span>把鼠标放上来试试</span></figure>' +
+      '<figure class="vd-hv-card is-hover"><span class="vd-hv-cap">悬停态</span><b>抬升 + 阴影 + 描边变色</b><span>右卡常驻悬停的样子</span></figure>' +
+    '</div>' +
+    '<p class="vd-help" style="margin-top:8px">两卡都真实响应悬停 · 移动端没有 hover，别只靠它传信息</p>';
+  };
+
+  D['transition'] = function () {
+    function toggle(smooth, label) {
+      return '<label class="vd-tr">' +
+        '<input type="checkbox"><span class="vd-tr-box' + (smooth ? ' is-smooth' : '') + '"></span><i>' + label + '</i>' +
+      '</label>';
+    }
+    return '<div class="vd-tr-row">' + toggle(false, '无过渡 · 生硬切换') + toggle(true, '200ms · 平滑过渡') + '</div>' +
+      '<p class="vd-help" style="margin-top:8px">两块都能点 · 同样的变化，过程不同，手感天差地别</p>';
+  };
+
+  D['entrance-animation'] = function () {
+    function step(delay, txt) {
+      return '<div class="vd-ent-item" style="animation-delay:' + delay + '">' + txt + '</div>';
+    }
+    return '<div class="vd-ent">' +
+      step('0s', '第一拍 · 立即浮现') +
+      step('.18s', '第二拍 · 180ms 后跟上') +
+      step('.36s', '第三拍 · 360ms 后收尾') +
+    '</div>' +
+    '<p class="vd-help" style="margin-top:8px">切去别的页面再回来，动画会重新播放</p>';
+  };
+
+  D['pulse-animation'] = function () {
+    return '<div class="vd-pulse-row">' +
+      '<span class="vd-pulse is-live"><i></i>LIVE 直播中</span>' +
+      '<span class="vd-pulse is-online"><i></i>在线</span>' +
+      '<span class="vd-pulse is-rec"><i></i>录制中</span>' +
+    '</div>' +
+    '<p class="vd-help" style="margin-top:8px">一页两三处是氛围 · 处处都闪就成了警报器</p>';
   };
 
   W.STD_VISUAL_DEMOS = D;
