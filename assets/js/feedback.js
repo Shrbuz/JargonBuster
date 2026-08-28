@@ -212,7 +212,7 @@
         currentShot = shot;
         previewImg.src = shot;
         previewImg.removeAttribute('hidden');
-        shotStatus.textContent = '已截图 ✓（点击可放大）';
+        shotStatus.textContent = '';
       } else {
         shotStatus.textContent = '截图失败，将不带截图提交（可点重新截图）';
       }

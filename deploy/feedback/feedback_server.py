@@ -11,7 +11,7 @@ feedback_server.py · 标准术语「反馈收集服务」（零第三方依赖�
   1. 校验并保存截图（JPEG/PNG）到 storage_dir，文件名随机
   2. 追加一条记录到 storage_dir/records.jsonl
   3. 通过 SMTP（QQ 邮箱等）发送通知邮件，正文含页面 / 描述 / 联系方式 / 截图链接
-  4. 简单防护：单 IP 限频、请求体大小上限、描述长度上限
+  4. 防护：单 IP 限频、请求体大小上限、描述长度上限、总存储配额、旧文件自动清理
 
 配置：同目录 feedback_config.json（模板见 feedback_config.example.json）
 用法：python3 feedback_server.py [端口]   # 默认 8899，仅监听 127.0.0.1
@@ -42,9 +42,11 @@ DEFAULT_CONFIG = {
     "storage_dir": os.path.join(BASE, 'feedback_data'),  # 截图与记录存放目录
     "base_url": "http://127.0.0.1:8899",  # 生成截图链接用的域名前缀
     "max_body": 6 * 1024 * 1024,    # 单请求体上限（字节）
-    "max_shot": 5 * 1024 * 1024,    # 单张截图 base64 上限（字节）
+    "max_shot": 2 * 1024 * 1024,    # 单张截图 base64 上限（字节）——视口截图较小，2MB 足够
     "per_ip_limit": 5,              # 单 IP 时间窗内最多提交次数
     "per_ip_window": 3600,          # 限频时间窗（秒）
+    "max_storage_mb": 200,           # 截图总存储配额（MB），超过则删除最旧的文件
+    "shot_ttl_days": 30,             # 截图保留天数，超过自动删除
 }
 
 
@@ -65,6 +67,7 @@ def load_config():
 CFG = load_config()
 
 _IP_HITS = {}
+_LAST_CLEANUP = 0  # 上次清理时间戳，避免每次提交都扫目录
 
 
 def throttled(ip):
@@ -79,6 +82,74 @@ def throttled(ip):
 
 def rand_name():
     return 'fd_' + ''.join(random.choice(string.hexdigits.lower()) for _ in range(16))
+
+
+def cleanup_storage():
+    """清理过期截图 + 总存储超配额时删最旧的文件。每 10 分钟最多跑一次。"""
+    global _LAST_CLEANUP
+    now = time.time()
+    if now - _LAST_CLEANUP < 600:  # 10 分钟内不重复清理
+        return
+    _LAST_CLEANUP = now
+
+    storage = CFG['storage_dir']
+    if not os.path.isdir(storage):
+        return
+
+    # 收集所有截图文件（不含 records.jsonl）
+    files = []
+    for name in os.listdir(storage):
+        if re.fullmatch(r'fd_[0-9a-f]{16}\.(jpg|png)', name):
+            fp = os.path.join(storage, name)
+            try:
+                st = os.stat(fp)
+                files.append((fp, st.st_mtime, st.st_size))
+            except OSError:
+                pass
+
+    # 1) 删超过 TTL 的旧文件
+    ttl = CFG['shot_ttl_days'] * 86400
+    deleted = 0
+    for fp, mtime, _ in files:
+        if now - mtime > ttl:
+            try:
+                os.remove(fp)
+                deleted += 1
+            except OSError:
+                pass
+    if deleted:
+        print('[cleanup] 已删除 %d 个超过 %d 天的截图' % (deleted, CFG['shot_ttl_days']))
+
+    # 2) 总存储超配额时，按修改时间从旧到新删，直到低于配额的 80%
+    quota = CFG['max_storage_mb'] * 1024 * 1024
+    # 重新统计剩余文件
+    remaining = []
+    total = 0
+    for name in os.listdir(storage):
+        if re.fullmatch(r'fd_[0-9a-f]{16}\.(jpg|png)', name):
+            fp = os.path.join(storage, name)
+            try:
+                st = os.stat(fp)
+                remaining.append((fp, st.st_mtime, st.st_size))
+                total += st.st_size
+            except OSError:
+                pass
+
+    if total > quota:
+        remaining.sort(key=lambda x: x[1])  # 最旧的在前
+        target = quota * 0.8  # 降到配额的 80% 以下
+        freed = 0
+        for fp, _, size in remaining:
+            if total - freed <= target:
+                break
+            try:
+                os.remove(fp)
+                freed += size
+            except OSError:
+                pass
+        if freed:
+            print('[cleanup] 存储超配额(%.1fMB > %dMB)，已删除最旧截图释放 %.1fMB' % (
+                total / 1048576, CFG['max_storage_mb'], freed / 1048576))
 
 
 def send_mail(subject, text):
@@ -180,6 +251,9 @@ class Handler(BaseHTTPRequestHandler):
         # 确保存储目录存在（运行期间被清理后也能自动重建，避免写记录崩溃）
         os.makedirs(CFG['storage_dir'], exist_ok=True)
 
+        # 保存截图前先触发清理（过期删除 + 配额控制），每 10 分钟最多实际执行一次
+        cleanup_storage()
+
         # 保存截图
         shot_file = None
         shot_url = ''
@@ -235,6 +309,7 @@ def main():
     srv = ThreadingHTTPServer(('127.0.0.1', port), Handler)
     print('feedback server → http://127.0.0.1:%d/feedback/' % port)
     print('storage     → %s' % CFG['storage_dir'])
+    print('quota       → %dMB total, %d days TTL' % (CFG['max_storage_mb'], CFG['shot_ttl_days']))
     print('smtp        → %s:%s to=%s' % (CFG['smtp_host'], CFG['smtp_port'], CFG['to'] or '(未配置)'))
     try:
         srv.serve_forever()
