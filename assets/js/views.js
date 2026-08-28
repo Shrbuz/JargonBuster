@@ -497,6 +497,9 @@
     return { title: '前端可视化标准术语 · 标准术语', html: html, mount: null };
   }
 
+  /* 可视化容器「导出为图片」按钮图标（描边风格下载图标） */
+  var VS_EXPORT_ICON = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v10m0 0-4-4m4 4 4-4"/><path d="M5 21h14"/></svg>';
+
   function renderVisualGroup(groupId, itemId) {
     var groups = W.STD_VISUAL_GROUPS || [];
     var group = null;
@@ -553,7 +556,10 @@
               ? '<a class="vs-term-link" href="#/t/' + encodeURIComponent(it.term) + '">查看词条详解 →</a>'
               : '') +
           '</div>' +
-          '<div class="vs-stage">' + (demoFn ? demoFn() : '<span class="vs-missing">示例待补充</span>') + '</div>' +
+          '<div class="vs-stage">' +
+            '<button type="button" class="vs-export" data-export-exclude data-name="' + esc(it.name) + '" title="导出为图片" aria-label="导出 ' + esc(it.name) + ' 为图片">' + VS_EXPORT_ICON + '</button>' +
+            (demoFn ? demoFn() : '<span class="vs-missing">示例待补充</span>') +
+          '</div>' +
         '</section>';
     });
 
@@ -622,6 +628,18 @@
         }, { rootMargin: '-25% 0px -65% 0px' });
         sections.forEach(function (s) { io.observe(s); });
       }
+
+      // 导出为图片：点击角标按钮，把 .vs-stage 纯容器导出为 PNG
+      root.querySelectorAll('.vs-export').forEach(function (btn) {
+        btn.addEventListener('click', function (e) {
+          e.preventDefault();
+          e.stopPropagation();
+          var stage = btn.closest('.vs-stage');
+          if (!stage || !W.STD_EXPORT) return;
+          var name = btn.getAttribute('data-name') || 'component';
+          W.STD_EXPORT.nodeToPng(stage, '标准术语-' + name + '.png');
+        });
+      });
     };
 
     return { title: group.name + ' · 前端可视化标准术语', html: html, mount: mount };

@@ -198,6 +198,7 @@
 .vs-term-link:hover { text-decoration: underline; }
 
 .vs-stage {
+  position: relative;
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -210,6 +211,34 @@
   border: 1px solid var(--line);
   border-radius: var(--r-md);
   overflow: hidden;
+}
+/* 可视化容器「导出为图片」角标按钮（导出时会被剔除，不进图；默认隐藏，悬浮卡片时显示） */
+.vs-export {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 2;
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  background: color-mix(in srgb, var(--surface) 78%, transparent);
+  color: var(--muted);
+  cursor: pointer;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(2px);
+  transition: opacity var(--t-fast), transform var(--t-fast), color var(--t-fast), background var(--t-fast), border-color var(--t-fast);
+}
+.vs-item:hover .vs-export,
+.vs-export:focus-visible { opacity: 1; pointer-events: auto; transform: none; }
+.vs-export:hover { color: var(--text); background: var(--surface); border-color: var(--accent); }
+.vs-export:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+/* 触屏设备（无 hover）：始终显示，保证可点 */
+@media (hover: none) {
+  .vs-export { opacity: 1; pointer-events: auto; transform: none; }
 }
 .vs-missing { font-size: var(--fs-xs); color: var(--muted); border: 1px dashed var(--line-strong); padding: var(--s3) var(--s4); border-radius: var(--r-md); }
 
@@ -737,10 +766,8 @@
 .vd-drawer-body { display: flex; flex-direction: column; gap: var(--s2); margin-top: 8px; overflow: hidden; }
 .vd-drawer-body .vd-list-item { border: 1px solid var(--line); border-radius: var(--r-sm); padding: 7px 10px; }
 
-.vd-menu-stage { position: relative; display: inline-block; padding-bottom: 90px; }
+.vd-menu-stage { display: inline-flex; flex-direction: column; align-items: flex-start; gap: 4px; }
 .vd-menu {
-  position: absolute;
-  left: 0; top: calc(100% + 4px);
   min-width: 170px;
   background: var(--surface);
   border: 1px solid var(--line);
@@ -1432,6 +1459,12 @@
   70% { box-shadow: 0 0 0 7px transparent; }
   100% { box-shadow: 0 0 0 0 transparent; }
 }
+
+/* 标本舞台是 flex 居中容器：整行布局的 grid/flex 子块必须显式占满宽度，
+   否则会收缩到内容宽——空色块 + 绝对定位说明文字的标本会塌成一条竖线 */
+.vd-grad-row, .vd-go-row, .vd-op-row, .vd-hv-row, .vd-tr-row, .vd-dm-row,
+.vd-ac-row, .vd-ov-row, .vd-ws-row, .vd-grid-demo, .vd-flex-line,
+.vd-marquee, .vd-ent, .vd-sp, .vd-sticky-stage, .vd-glass-stage { width: 100%; }
 
 /* ---------- 响应式 ---------- */
 
