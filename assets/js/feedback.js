@@ -151,24 +151,42 @@
     lightboxImg.removeAttribute('src');
   }
 
-  /* 用 modern-screenshot 整页截图 → JPEG dataURL，失败返回 null 不阻塞提交 */
+  /* 只截当前可视区域（viewport），不全页；modern-screenshot 截全页 canvas 后裁剪到可视窗口 */
   function captureShot() {
     if (!W.modernScreenshot) {
       console.error('[反馈截图] modern-screenshot 未加载（检查 assets/js/vendor/modern-screenshot.min.js）');
       return Promise.resolve(null);
     }
-    var target = doc.querySelector('.app') || doc.body;
-    console.log('[反馈截图] modern-screenshot 开始, target:', target.tagName, 'size:', target.scrollWidth + 'x' + target.scrollHeight);
+    var target = doc.documentElement;
+    var vw = W.innerWidth;
+    var vh = W.innerHeight;
+    var sx = W.scrollX || doc.documentElement.scrollLeft || 0;
+    var sy = W.scrollY || doc.documentElement.scrollTop || 0;
+    var scale = 1.5;
+    console.log('[反馈截图] 视口截图, viewport:', vw + 'x' + vh, 'scroll:', sx + ',' + sy);
     doc.body.classList.add('is-capturing');
 
-    var p = W.modernScreenshot.domToJpeg(target, {
-      quality: 0.72,
-      scale: 1.5,
+    var p = W.modernScreenshot.domToCanvas(target, {
+      scale: scale,
       backgroundColor: null,
       debug: false
-    }).then(function (dataUrl) {
-      console.log('[反馈截图] modern-screenshot 成功, dataURL长度:', dataUrl ? dataUrl.length : 0);
-      return dataUrl;
+    }).then(function (canvas) {
+      var dpr = scale;
+      var cropX = Math.round(sx * dpr);
+      var cropY = Math.round(sy * dpr);
+      var cropW = Math.min(Math.round(vw * dpr), Math.max(0, canvas.width - cropX));
+      var cropH = Math.min(Math.round(vh * dpr), Math.max(0, canvas.height - cropY));
+      if (cropW <= 0 || cropH <= 0) {
+        console.warn('[反馈截图] 裁剪区域无效, 返回全图', canvas.width + 'x' + canvas.height);
+        return canvas.toDataURL('image/jpeg', 0.72);
+      }
+      var cropped = doc.createElement('canvas');
+      cropped.width = cropW;
+      cropped.height = cropH;
+      var ctx = cropped.getContext('2d');
+      ctx.drawImage(canvas, cropX, cropY, cropW, cropH, 0, 0, cropW, cropH);
+      console.log('[反馈截图] 裁剪完成:', cropW + 'x' + cropH);
+      return cropped.toDataURL('image/jpeg', 0.72);
     });
 
     var timeout = new Promise(function (resolve) {
@@ -181,7 +199,6 @@
       doc.body.classList.remove('is-capturing');
     });
   }
-
 
   /* 打开弹窗时触发：截图并显示预览 */
   function doCapture() {
