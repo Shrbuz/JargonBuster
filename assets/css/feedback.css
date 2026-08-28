@@ -1,0 +1,156 @@
+/* ============================================================
+   feedback.css · 全站反馈表单样式（悬浮按钮 + 弹窗）
+   复用 Design Tokens（tokens.css）与全局 .btn 系列
+   ============================================================ */
+
+/* ---- 悬浮按钮 ---- */
+.feedback-fab {
+  position: fixed;
+  right: var(--s5, 24px);
+  bottom: var(--s5, 24px);
+  z-index: 900;
+  width: 46px;
+  height: 46px;
+  border-radius: var(--r-full, 999px);
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--on-accent, #fff);
+  background: var(--accent, #0e6b5b);
+  box-shadow: var(--shadow-2, 0 4px 14px rgba(0, 0, 0, .15));
+  transition: transform var(--t-fast, 140ms) ease, background var(--t-fast, 140ms) ease;
+}
+.feedback-fab:hover {
+  background: var(--accent-strong, #0a5548);
+  transform: translateY(-2px);
+}
+.feedback-fab:focus-visible {
+  outline: 2px solid var(--accent, #0e6b5b);
+  outline-offset: 2px;
+}
+
+/* ---- 弹窗遮罩 ---- */
+.feedback-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 950;
+  background: rgba(0, 0, 0, .38);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--s4, 16px);
+}
+.feedback-modal[hidden] { display: none; }
+
+.feedback-card {
+  width: 100%;
+  max-width: 480px;
+  max-height: calc(100vh - 48px);
+  overflow-y: auto;
+  background: var(--surface, #fffdf8);
+  color: var(--text, #26221b);
+  border: 1px solid var(--line, #e2dccd);
+  border-radius: var(--r-lg, 14px);
+  box-shadow: var(--shadow-3, 0 12px 32px rgba(0, 0, 0, .2));
+  animation: feedback-pop var(--t-med, 200ms) ease;
+}
+@keyframes feedback-pop {
+  from { opacity: 0; transform: translateY(8px) scale(.98); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.feedback-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--s4, 16px) var(--s5, 24px);
+  border-bottom: 1px solid var(--line, #e2dccd);
+}
+.feedback-card-title { font-size: var(--fs-lg, 18px); font-weight: 700; }
+.feedback-close {
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-size: 22px;
+  line-height: 1;
+  color: var(--muted, #6d665a);
+  padding: 2px 6px;
+  border-radius: var(--r-sm, 6px);
+}
+.feedback-close:hover { background: var(--surface-2, #efece3); color: var(--text, #26221b); }
+
+.feedback-card-body { padding: var(--s4, 16px) var(--s5, 24px); display: grid; gap: var(--s3, 12px); }
+
+.feedback-field { display: grid; gap: 6px; }
+.feedback-label { font-size: var(--fs-sm, 13px); color: var(--muted, #6d665a); }
+.feedback-req { color: var(--danger, #ab3f38); }
+
+.feedback-warn {
+  font-size: var(--fs-sm, 13px);
+  line-height: 1.6;
+  color: var(--warn, #9a5b10);
+  background: var(--warn-soft, #f7ecd9);
+  border: 1px solid var(--line, #e2dccd);
+  border-radius: var(--r-md, 10px);
+  padding: var(--s3, 12px);
+}
+.feedback-warn code {
+  font-family: var(--font-mono, monospace);
+  background: rgba(0, 0, 0, .06);
+  padding: 1px 5px;
+  border-radius: 4px;
+}
+
+.feedback-input,
+.feedback-textarea {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 9px 12px;
+  font-size: var(--fs-md, 15px);
+  font-family: var(--font-sans, system-ui);
+  color: var(--text, #26221b);
+  background: var(--surface-2, #efece3);
+  border: 1px solid var(--line, #e2dccd);
+  border-radius: var(--r-md, 10px);
+  transition: border-color var(--t-fast, 140ms) ease, box-shadow var(--t-fast, 140ms) ease;
+}
+.feedback-input:focus,
+.feedback-textarea:focus {
+  outline: none;
+  border-color: var(--accent, #0e6b5b);
+  box-shadow: 0 0 0 3px var(--accent-soft, #e0eeea);
+}
+.feedback-textarea { resize: vertical; min-height: 96px; }
+
+.feedback-shot {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: var(--fs-sm, 13px);
+  color: var(--muted, #6d665a);
+  cursor: pointer;
+  user-select: none;
+}
+.feedback-shot input { accent-color: var(--accent, #0e6b5b); width: 15px; height: 15px; }
+
+.feedback-preview {
+  max-width: 100%;
+  max-height: 200px;
+  border-radius: var(--r-md, 10px);
+  border: 1px solid var(--line, #e2dccd);
+  background: var(--surface-2, #efece3);
+}
+
+.feedback-card-foot {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--s3, 12px);
+  padding: var(--s3, 12px) var(--s5, 24px) var(--s4, 16px);
+  border-top: 1px solid var(--line, #e2dccd);
+}
+
+/* 截图时隐藏反馈相关元素，避免出现在整页截图里 */
+body.is-capturing .feedback-fab,
+body.is-capturing .feedback-modal { display: none !important; }

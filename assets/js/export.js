@@ -66,27 +66,34 @@
     return dstRoot;
   }
 
-  function downloadBlob(blob, filename) {
-    var url = URL.createObjectURL(blob);
-    var a = W.document.createElement('a');
-    a.href = url;
-    a.download = filename || 'export.png';
-    W.document.body.appendChild(a);
-    a.click();
-    a.remove();
-    setTimeout(function () { URL.revokeObjectURL(url); }, 1500);
-  }
-
   /**
-   * 把 node（如 .vs-stage）导出为 PNG 并下载。
-   * 返回 Promise<dataURL>，可据此预览或复用。
+   * 把 node 渲染为图片 dataURL（不触发下载）。
+   * @param {Element} node 要绘制的根元素（反馈截图传 document.documentElement）
+   * @param {Object} [opts]
+   *   format: 'image/png' | 'image/jpeg'（默认 png）
+   *   quality: JPEG 质量 0~1（默认 0.92）
+   *   fullPage: 为 true 时按文档滚动尺寸绘制整页（默认按节点自身盒尺寸）
+   *   maxWidth: 输出宽度上限（px），超过则整体等比缩小（默认不限）
+   *   scale: 基础倍率（默认 2；受 maxWidth 约束）
+   * @returns {Promise<string>} dataURL
    */
-  function nodeToPng(node, filename) {
+  function nodeToDataUrl(node, opts) {
+    opts = opts || {};
+    var format = opts.format || 'image/png';
+    var quality = opts.quality != null ? opts.quality : 0.92;
+    var maxWidth = opts.maxWidth || 0;
+    var scale = opts.scale || 2;
     return new Promise(function (resolve, reject) {
       if (!node) { reject(new Error('node 为空')); return; }
       var rect = node.getBoundingClientRect();
       var w = Math.max(1, Math.round(rect.width));
       var h = Math.max(1, Math.round(rect.height));
+      if (opts.fullPage) {
+        w = Math.max(w, Math.round(node.scrollWidth || w));
+        h = Math.max(h, Math.round(node.scrollHeight || h));
+      }
+      if (maxWidth > 0 && w * scale > maxWidth) scale = maxWidth / w;
+      scale = Math.min(3, Math.max(0.2, scale));
 
       var clone = buildClone(node);
       // 显式尺寸放到样式串末尾，确保覆盖计算样式里的 width/height
@@ -103,19 +110,14 @@
       var img = new W.Image();
       img.onload = function () {
         try {
-          var scale = 2; // 固定 2x，保证推广素材清晰
           var canvas = W.document.createElement('canvas');
-          canvas.width = Math.round(w * scale);
-          canvas.height = Math.round(h * scale);
+          canvas.width = Math.max(1, Math.round(w * scale));
+          canvas.height = Math.max(1, Math.round(h * scale));
           var ctx = canvas.getContext('2d');
           ctx.clearRect(0, 0, canvas.width, canvas.height);
           ctx.scale(scale, scale);
           ctx.drawImage(img, 0, 0);
-          canvas.toBlob(function (blob) {
-            if (!blob) { reject(new Error('toBlob 失败')); return; }
-            downloadBlob(blob, filename);
-            resolve(canvas.toDataURL('image/png'));
-          }, 'image/png');
+          resolve(canvas.toDataURL(format, quality));
         } catch (e) { reject(e); }
       };
       img.onerror = function () { reject(new Error('SVG 渲染失败')); };
@@ -123,5 +125,21 @@
     });
   }
 
-  W.STD_EXPORT = { nodeToPng: nodeToPng };
+  /**
+   * 把 node（如 .vs-stage）导出为 PNG 并下载。
+   * 返回 Promise<dataURL>，可据此预览或复用。
+   */
+  function nodeToPng(node, filename) {
+    return nodeToDataUrl(node, { format: 'image/png', scale: 2 }).then(function (dataUrl) {
+      var a = W.document.createElement('a');
+      a.href = dataUrl;
+      a.download = filename || 'export.png';
+      W.document.body.appendChild(a);
+      a.click();
+      a.remove();
+      return dataUrl;
+    });
+  }
+
+  W.STD_EXPORT = { nodeToDataUrl: nodeToDataUrl, nodeToPng: nodeToPng };
 })(window);
