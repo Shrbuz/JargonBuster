@@ -2,7 +2,7 @@
    feedback.js · 全站反馈表单（零依赖）
    - 右下角悬浮按钮 → 弹窗
    - 自动带当前页面 ID（location.hash / pathname）+ 页面标题
-   - 可附带当前页面截图（复用 export.js 的整页 JPEG 捕获）
+   - 打开弹窗即自动整页截图并显示预览（可重新截图）
    - POST 到反馈收信服务；本地(localhost)自动指向 127.0.0.1:8899
    挂载：无（自执行注入 DOM）
    ============================================================ */
@@ -16,7 +16,8 @@
   var PAGE_ID = (W.location.hash || W.location.pathname || '/') || 'home';
   var PAGE_TITLE = doc.title || '';
 
-  var fab, modal, pageInput, descInput, contactInput, shotCheck, previewImg, submitBtn;
+  var fab, modal, pageInput, descInput, contactInput, shotCheck, previewImg, submitBtn, recaptureBtn, shotStatus;
+  var currentShot = null;
 
   var SVG_MSG =
     '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
@@ -33,7 +34,7 @@
   function build() {
     fab = h('button', 'feedback-fab', { type: 'button', 'aria-label': '反馈问题', title: '反馈问题' }, SVG_MSG);
 
-    modal = h('div', 'feedback-modal');
+    modal = h('div', 'feedback-modal', { hidden: '' });
     var card = h('div', 'feedback-card');
 
     var head = h('div', 'feedback-card-head');
@@ -65,19 +66,24 @@
     shotRow.appendChild(shotCheck);
     shotRow.appendChild(h('span', null, null, '附带当前页面截图（推荐，便于定位）'));
 
+    var shotBar = h('div', 'feedback-shot-bar');
+    shotStatus = h('div', 'feedback-shot-status', null, '');
+    recaptureBtn = h('button', 'feedback-recap btn', { type: 'button' }, '重新截图');
+    shotBar.appendChild(shotStatus);
+    shotBar.appendChild(recaptureBtn);
+
     previewImg = h('img', 'feedback-preview', { alt: '截图预览', hidden: '' });
 
     body.appendChild(fieldPage);
     body.appendChild(fieldDesc);
     body.appendChild(fieldContact);
     body.appendChild(shotRow);
+    body.appendChild(shotBar);
     body.appendChild(previewImg);
 
     if (isFile) {
-      // file:// 直开时无法提交：提示改用本地服务器
       body.appendChild(h('div', 'feedback-warn', null,
         '当前是 file:// 直接打开，反馈与截图不可用。请先运行 <code>node tools\\serve.js</code>，再访问 <code>http://localhost:4173</code> 进行测试。'));
-      submitBtn.disabled = true;
     }
 
     var foot = h('div', 'feedback-card-foot');
@@ -99,6 +105,11 @@
     modal.querySelector('.feedback-close').addEventListener('click', close);
     cancelBtn.addEventListener('click', close);
     submitBtn.addEventListener('click', submit);
+    recaptureBtn.addEventListener('click', doCapture);
+    shotCheck.addEventListener('change', function () {
+      if (shotCheck.checked) doCapture();
+      else { currentShot = null; shotStatus.textContent = ''; previewImg.setAttribute('hidden', ''); previewImg.removeAttribute('src'); }
+    });
     descInput.addEventListener('keydown', function (e) {
       if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') submit();
     });
@@ -107,12 +118,15 @@
   function open() {
     modal.removeAttribute('hidden');
     descInput.focus();
+    if (shotCheck.checked && !currentShot) doCapture();
   }
 
   function close() {
     modal.setAttribute('hidden', '');
     previewImg.setAttribute('hidden', '');
     previewImg.removeAttribute('src');
+    shotStatus.textContent = '';
+    currentShot = null;
   }
 
   /* 整页截图（JPEG 压缩 + 限宽），失败返回 null 不阻塞提交 */
@@ -123,6 +137,25 @@
       fullPage: true, format: 'image/jpeg', quality: 0.72, maxWidth: 1600
     }).catch(function () { return null; }).finally(function () {
       doc.body.classList.remove('is-capturing');
+    });
+  }
+
+  /* 打开弹窗时触发：截图并显示预览 */
+  function doCapture() {
+    if (!shotCheck.checked) return;
+    currentShot = null;
+    shotStatus.textContent = '截图中…';
+    previewImg.setAttribute('hidden', '');
+    previewImg.removeAttribute('src');
+    captureShot().then(function (shot) {
+      if (shot) {
+        currentShot = shot;
+        previewImg.src = shot;
+        previewImg.removeAttribute('hidden');
+        shotStatus.textContent = '已截图 ✓';
+      } else {
+        shotStatus.textContent = '截图失败，将不带截图提交（可点重新截图）';
+      }
     });
   }
 
@@ -156,8 +189,10 @@
     var finish = function (shot) {
       if (shot) {
         payload.shot = shot;
-        previewImg.src = shot;
-        previewImg.removeAttribute('hidden');
+        if (!previewImg.getAttribute('src')) {
+          previewImg.src = shot;
+          previewImg.removeAttribute('hidden');
+        }
       }
       post(payload).then(function (res) {
         submitBtn.disabled = false;
@@ -179,7 +214,8 @@
     };
 
     if (shotCheck.checked) {
-      captureShot().then(finish);
+      if (currentShot) finish(currentShot);
+      else captureShot().then(finish);
     } else {
       finish(null);
     }
