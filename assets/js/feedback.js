@@ -132,17 +132,25 @@
 
   /* 整页截图（JPEG 压缩 + 限宽限高 + 超时），失败返回 null 不阻塞提交 */
   function captureShot() {
+    console.log('[反馈截图] captureShot 开始, STD_EXPORT存在:', !!W.STD_EXPORT);
     if (!W.STD_EXPORT) return Promise.resolve(null);
     // 抓 .app 主容器（排除 head / 反馈弹窗 / 悬浮按钮），fallback 到 body
     var target = doc.querySelector('.app') || doc.body;
+    console.log('[反馈截图] 截图目标:', target.tagName + '.' + (target.className || ''), '| rect:', target.getBoundingClientRect().width + 'x' + target.getBoundingClientRect().height, '| scroll:', target.scrollWidth + 'x' + target.scrollHeight);
     doc.body.classList.add('is-capturing');
     var p = W.STD_EXPORT.nodeToDataUrl(target, {
       fullPage: true, format: 'image/jpeg', quality: 0.72, maxWidth: 1600, maxHeight: 3000
     });
     var timeout = new Promise(function (resolve) {
-      setTimeout(function () { resolve(null); }, CAPTURE_TIMEOUT);
+      setTimeout(function () { console.warn('[反馈截图] ⚠️ 超时(8s)，返回null'); resolve(null); }, CAPTURE_TIMEOUT);
     });
-    return Promise.race([p, timeout]).catch(function () { return null; }).finally(function () {
+    return Promise.race([p, timeout]).then(function (r) {
+      console.log('[反馈截图] captureShot 结果:', r ? ('成功 dataURL长度=' + r.length) : '失败/超时(null)');
+      return r;
+    }).catch(function (e) {
+      console.error('[反馈截图] captureShot 异常:', e);
+      return null;
+    }).finally(function () {
       doc.body.classList.remove('is-capturing');
     });
   }
