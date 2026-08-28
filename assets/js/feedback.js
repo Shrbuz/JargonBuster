@@ -151,51 +151,37 @@
     lightboxImg.removeAttribute('src');
   }
 
-  /* 用 html2canvas 整页截图 → JPEG dataURL，失败返回 null 不阻塞提交 */
+  /* 用 modern-screenshot 整页截图 → JPEG dataURL，失败返回 null 不阻塞提交 */
   function captureShot() {
-    if (!W.html2canvas) {
-      console.error('[反馈截图] html2canvas 未加载（检查 assets/js/vendor/html2canvas.min.js）');
+    if (!W.modernScreenshot) {
+      console.error('[反馈截图] modern-screenshot 未加载（检查 assets/js/vendor/modern-screenshot.min.js）');
       return Promise.resolve(null);
     }
     var target = doc.querySelector('.app') || doc.body;
-    console.log('[反馈截图] html2canvas 开始, target:', target.tagName, 'size:', target.scrollWidth + 'x' + target.scrollHeight);
+    console.log('[反馈截图] modern-screenshot 开始, target:', target.tagName, 'size:', target.scrollWidth + 'x' + target.scrollHeight);
     doc.body.classList.add('is-capturing');
 
-    var p = W.html2canvas(target, {
-      backgroundColor: null,
+    var p = W.modernScreenshot.domToJpeg(target, {
+      quality: 0.72,
       scale: 1.5,
-      useCORS: true,
-      logging: false,
-      windowWidth: W.innerWidth,
-      windowHeight: W.innerHeight,
-      scrollX: -W.scrollX,
-      scrollY: -W.scrollY,
-      onclone: function (clonedDoc) {
-        var root = clonedDoc.querySelector('.app');
-        if (root) {
-          var all = root.querySelectorAll('*');
-          for (var i = 0; i < all.length; i++) {
-            var s = clonedDoc.defaultView.getComputedStyle(all[i]);
-            if (s.overflowY !== 'visible') all[i].style.overflowY = 'visible';
-            if (s.overflowX !== 'visible') all[i].style.overflowX = 'visible';
-          }
-        }
-      }
-    }).then(function (canvas) {
-      console.log('[反馈截图] html2canvas 成功, canvas:', canvas.width + 'x' + canvas.height);
-      return canvas.toDataURL('image/jpeg', 0.72);
+      backgroundColor: null,
+      debug: false
+    }).then(function (dataUrl) {
+      console.log('[反馈截图] modern-screenshot 成功, dataURL长度:', dataUrl ? dataUrl.length : 0);
+      return dataUrl;
     });
 
     var timeout = new Promise(function (resolve) {
-      setTimeout(function () { console.warn('[反馈截图] html2canvas 超时(' + CAPTURE_TIMEOUT + 'ms)'); resolve(null); }, CAPTURE_TIMEOUT);
+      setTimeout(function () { console.warn('[反馈截图] modern-screenshot 超时(' + CAPTURE_TIMEOUT + 'ms)'); resolve(null); }, CAPTURE_TIMEOUT);
     });
     return Promise.race([p, timeout]).catch(function (e) {
-      console.error('[反馈截图] html2canvas 异常:', e);
+      console.error('[反馈截图] modern-screenshot 异常:', e);
       return null;
     }).finally(function () {
       doc.body.classList.remove('is-capturing');
     });
   }
+
 
   /* 打开弹窗时触发：截图并显示预览 */
   function doCapture() {
