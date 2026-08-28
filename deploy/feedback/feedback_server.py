@@ -177,6 +177,9 @@ class Handler(BaseHTTPRequestHandler):
         if len(desc) > 2000:
             return self._send_json(400, {'ok': False, 'error': '描述过长'})
 
+        # 确保存储目录存在（运行期间被清理后也能自动重建，避免写记录崩溃）
+        os.makedirs(CFG['storage_dir'], exist_ok=True)
+
         # 保存截图
         shot_file = None
         shot_url = ''
