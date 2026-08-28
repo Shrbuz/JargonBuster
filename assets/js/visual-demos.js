@@ -148,6 +148,19 @@
     '</div>';
   };
 
+  D['tag-input'] = function () {
+    function chip(txt) { return '<span class="vd-tag vd-tag-del">' + txt + '<i>' + I.x + '</i></span>'; }
+    function filter(txt, on) {
+      return '<label class="vd-ti-filter"><input type="checkbox"' + (on ? ' checked' : '') + '><i>' + I.check + '</i>' + txt + '</label>';
+    }
+    return '<div class="vd-ti">' +
+      '<div class="vd-ti-box">' + chip('前端') + chip('JavaScript') +
+        '<span class="vd-ti-caret"></span><span class="vd-ti-hint">输入新标签，回车生成</span></div>' +
+      '<div class="vd-ti-filters">' + filter('已支付', true) + filter('待支付', true) + filter('已退款', false) + '</div>' +
+      '<p class="vd-help" style="margin-top:8px">上框：回车把输入固化成胶囊，× 单独移除 · 下排可真点：选中态即筛选 chip 的「已选条件」</p>' +
+    '</div>';
+  };
+
   D['checkbox'] = function () {
     return '<div class="vd-stack">' +
       '<label class="vd-check"><input type="checkbox" checked><i>' + I.check + '</i>记住我</label>' +

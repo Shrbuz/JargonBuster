@@ -131,7 +131,7 @@ try {
   const allItems = VG.flatMap(g => g.items);
   assert(VG.length === 10, '图鉴分组 = 10（实际 ' + VG.length + '）');
   assert(['layout', 'effects', 'motion'].every(id => VG.some(g => g.id === id)), '新增布局/视觉技法/动效三组已注册');
-  assert(allItems.length === 73, '图鉴元素 = 73（实际 ' + allItems.length + '）');
+  assert(allItems.length === 74, '图鉴元素 = 74（实际 ' + allItems.length + '）');
   const noDemo = allItems.filter(it => typeof VD[it.demo] !== 'function');
   assert(noDemo.length === 0, '每个元素都有呈现效果示例' + (noDemo.length ? '（缺失: ' + noDemo.map(i => i.id).join(',') + '）' : ''));
   const badItem = allItems.find(it => !it.name || !it.en || !it.desc || !it.id);
@@ -152,10 +152,13 @@ try {
   assert(W.STD_SEARCH.searchVisuals('毛玻璃').some(r => r.item.id === 'glassmorphism'), '图鉴搜索「毛玻璃」命中毛玻璃');
   assert(W.STD_SEARCH.searchVisuals('跑马灯')[0].item.id === 'marquee', '图鉴搜索「跑马灯」命中跑马灯（区别于轮播）');
   assert(W.STD_SEARCH.searchVisuals('羽化').some(r => r.item.id === 'gradient-overlay'), '图鉴搜索「羽化」命中渐变遮罩');
+  assert(W.STD_SEARCH.searchVisuals('标签选择器').some(r => r.item.id === 'tag-input'), '图鉴搜索「标签选择器」命中标签输入框');
   const termBtn = W.STD_VIEWS.term('button');
   assert(termBtn && termBtn.html.includes('#/visuals/basics/button'), '词条详情页含图鉴反链');
   const termGrad = W.STD_VIEWS.term('gradient');
   assert(termGrad && termGrad.html.includes('#/visuals/effects/gradient'), '渐变词条含图鉴反链');
+  const termChip = W.STD_VIEWS.term('tag-chip');
+  assert(termChip && termChip.html.includes('#/visuals/form/tag-input'), 'tag-chip 词条含标签输入框反链');
 
   W.location.hash = '#/visuals/basics/button';
   const r = W.STD_ROUTER.parseHash();

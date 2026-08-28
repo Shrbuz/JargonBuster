@@ -395,6 +395,30 @@
 .vd-select { width: 240px; max-width: 100%; }
 .vd-textarea { width: 240px; max-width: 100%; min-height: 72px; resize: vertical; }
 
+/* 标签输入框 · 输入型 Chip：输入固化成胶囊 + 可点选的筛选 chip（checkbox 纯 CSS 交互） */
+.vd-ti { display: flex; flex-direction: column; gap: var(--s3); }
+.vd-ti-box {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 6px;
+  min-height: 44px; padding: 6px 10px;
+  background: var(--surface); border: 1px solid var(--line-strong); border-radius: var(--r-md);
+}
+.vd-ti-box:focus-within { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+.vd-ti-caret { width: 1px; height: 18px; background: var(--line-strong); }
+.vd-ti-hint { font-size: var(--fs-xs); color: var(--muted); }
+.vd-ti-filters { display: flex; flex-wrap: wrap; gap: var(--s2); }
+.vd-ti-filter {
+  position: relative; display: inline-flex; align-items: center; gap: 4px;
+  padding: 4px 10px; font-size: var(--fs-sm); color: var(--text); cursor: pointer;
+  background: var(--surface); border: 1px solid var(--line-strong); border-radius: var(--r-full);
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+.vd-ti-filter input { position: absolute; opacity: 0; pointer-events: none; }
+.vd-ti-filter i { display: inline-flex; opacity: 0; transition: opacity 0.15s ease; }
+.vd-ti-filter i svg { width: 12px; height: 12px; }
+.vd-ti-filter:has(input:checked) { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
+.vd-ti-filter:has(input:checked) i { opacity: 1; }
+.vd-ti-filter:has(input:focus-visible) { outline: 2px solid var(--accent); outline-offset: 2px; }
+
 .vd-check {
   position: relative;
   display: flex;
@@ -1464,7 +1488,7 @@
    否则会收缩到内容宽——空色块 + 绝对定位说明文字的标本会塌成一条竖线 */
 .vd-grad-row, .vd-go-row, .vd-op-row, .vd-hv-row, .vd-tr-row, .vd-dm-row,
 .vd-ac-row, .vd-ov-row, .vd-ws-row, .vd-grid-demo, .vd-flex-line,
-.vd-marquee, .vd-ent, .vd-sp, .vd-sticky-stage, .vd-glass-stage { width: 100%; }
+.vd-marquee, .vd-ent, .vd-sp, .vd-sticky-stage, .vd-glass-stage, .vd-ti { width: 100%; }
 
 /* ---------- 响应式 ---------- */
 
