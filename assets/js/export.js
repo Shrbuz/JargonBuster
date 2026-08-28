@@ -68,6 +68,11 @@
     return dstRoot;
   }
 
+  /* 把 HTML 字符串中未转义的 & 转成 &amp;（SVG 是严格 XML，未转义 & 会解析失败） */
+  function escapeAmp(html) {
+    return html.replace(/&(?!(?:amp|lt|gt|quot|apos|#\d+|#x[0-9a-fA-F]+);)/g, '&amp;');
+  }
+
   /**
    * 把 node 渲染为图片 dataURL（不触发下载）。
    * @param {Element} node 要绘制的根元素
@@ -107,10 +112,13 @@
       // 显式尺寸放到样式串末尾，确保覆盖计算样式里的 width/height
       clone.setAttribute('style', (clone.getAttribute('style') || '') + ';width:' + w + 'px;height:' + h + 'px;');
 
+      // 关键：转义未转义的 &，否则 SVG(XML) 解析失败
+      var html = escapeAmp(clone.outerHTML);
+
       var svg =
         '<svg xmlns="http://www.w3.org/2000/svg" width="' + w + '" height="' + h + '">' +
           '<foreignObject x="0" y="0" width="' + w + '" height="' + h + '">' +
-            '<div xmlns="http://www.w3.org/1999/xhtml">' + clone.outerHTML + '</div>' +
+            '<div xmlns="http://www.w3.org/1999/xhtml">' + html + '</div>' +
           '</foreignObject>' +
         '</svg>';
       var url = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
@@ -138,6 +146,8 @@
       };
       img.onerror = function (e) {
         console.error(LOG, '④图片加载失败(SVG渲染失败)', {耗时ms: Date.now() - t1, event: e});
+        // 打出 SVG 前 3000 字符，便于定位具体哪段 HTML 导致解析失败
+        console.error(LOG, '失败SVG前3000字符:\n', svg.substring(0, 3000));
         reject(new Error('SVG 渲染失败'));
       };
       img.src = url;
