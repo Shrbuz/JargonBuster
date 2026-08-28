@@ -177,3 +177,6 @@ body.is-capturing .feedback-modal { display: none !important; }
   object-fit: contain; border-radius: 6px;
   box-shadow: 0 8px 40px rgba(0, 0, 0, 0.5);
 }
+
+/* 修复：[hidden] 被 display:flex 覆盖，显式声明隐藏 */
+.feedback-lightbox[hidden] { display: none !important; }
