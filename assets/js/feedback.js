@@ -153,8 +153,12 @@
 
   /* 用 html2canvas 整页截图 → JPEG dataURL，失败返回 null 不阻塞提交 */
   function captureShot() {
-    if (!W.html2canvas) return Promise.resolve(null);
+    if (!W.html2canvas) {
+      console.error('[反馈截图] html2canvas 未加载（检查 assets/js/vendor/html2canvas.min.js）');
+      return Promise.resolve(null);
+    }
     var target = doc.querySelector('.app') || doc.body;
+    console.log('[反馈截图] html2canvas 开始, target:', target.tagName, 'size:', target.scrollWidth + 'x' + target.scrollHeight);
     doc.body.classList.add('is-capturing');
 
     var p = W.html2canvas(target, {
@@ -167,7 +171,6 @@
       scrollX: -W.scrollX,
       scrollY: -W.scrollY,
       onclone: function (clonedDoc) {
-        // 克隆文档里把 overflow 改成 visible，确保内容不被裁剪
         var root = clonedDoc.querySelector('.app');
         if (root) {
           var all = root.querySelectorAll('*');
@@ -179,13 +182,17 @@
         }
       }
     }).then(function (canvas) {
+      console.log('[反馈截图] html2canvas 成功, canvas:', canvas.width + 'x' + canvas.height);
       return canvas.toDataURL('image/jpeg', 0.72);
     });
 
     var timeout = new Promise(function (resolve) {
-      setTimeout(function () { resolve(null); }, CAPTURE_TIMEOUT);
+      setTimeout(function () { console.warn('[反馈截图] html2canvas 超时(' + CAPTURE_TIMEOUT + 'ms)'); resolve(null); }, CAPTURE_TIMEOUT);
     });
-    return Promise.race([p, timeout]).catch(function () { return null; }).finally(function () {
+    return Promise.race([p, timeout]).catch(function (e) {
+      console.error('[反馈截图] html2canvas 异常:', e);
+      return null;
+    }).finally(function () {
       doc.body.classList.remove('is-capturing');
     });
   }
