@@ -3,6 +3,7 @@
    - 右下角悬浮按钮 → 弹窗
    - 自动带当前页面 ID（location.hash / pathname）+ 页面标题
    - 打开弹窗即自动截图并显示预览（可重新截图，点击预览图可放大）
+   - 截图用 html2canvas（直接 DOM→canvas，不走 SVG foreignObject）
    - POST 到反馈收信服务；本地(localhost)自动指向 127.0.0.1:8899
    挂载：无（自执行注入 DOM）
    ============================================================ */
@@ -15,7 +16,7 @@
   var ENDPOINT = isLocal ? 'http://127.0.0.1:8899/feedback/' : '/feedback/';
   var PAGE_ID = (W.location.hash || W.location.pathname || '/') || 'home';
   var PAGE_TITLE = doc.title || '';
-  var CAPTURE_TIMEOUT = 8000; // 截图超时（毫秒）
+  var CAPTURE_TIMEOUT = 15000; // html2canvas 整页截图可能较慢，给 15 秒
 
   var fab, modal, pageInput, descInput, contactInput, shotCheck, previewImg, submitBtn, recaptureBtn, shotStatus;
   var lightbox, lightboxImg;
@@ -150,14 +151,37 @@
     lightboxImg.removeAttribute('src');
   }
 
-  /* 整页截图（JPEG 压缩 + 限宽限高 + 超时），失败返回 null 不阻塞提交 */
+  /* 用 html2canvas 整页截图 → JPEG dataURL，失败返回 null 不阻塞提交 */
   function captureShot() {
-    if (!W.STD_EXPORT) return Promise.resolve(null);
+    if (!W.html2canvas) return Promise.resolve(null);
     var target = doc.querySelector('.app') || doc.body;
     doc.body.classList.add('is-capturing');
-    var p = W.STD_EXPORT.nodeToDataUrl(target, {
-      fullPage: true, format: 'image/jpeg', quality: 0.72, maxWidth: 1600, maxHeight: 3000
+
+    var p = W.html2canvas(target, {
+      backgroundColor: null,
+      scale: 1.5,
+      useCORS: true,
+      logging: false,
+      windowWidth: W.innerWidth,
+      windowHeight: W.innerHeight,
+      scrollX: -W.scrollX,
+      scrollY: -W.scrollY,
+      onclone: function (clonedDoc) {
+        // 克隆文档里把 overflow 改成 visible，确保内容不被裁剪
+        var root = clonedDoc.querySelector('.app');
+        if (root) {
+          var all = root.querySelectorAll('*');
+          for (var i = 0; i < all.length; i++) {
+            var s = clonedDoc.defaultView.getComputedStyle(all[i]);
+            if (s.overflowY !== 'visible') all[i].style.overflowY = 'visible';
+            if (s.overflowX !== 'visible') all[i].style.overflowX = 'visible';
+          }
+        }
+      }
+    }).then(function (canvas) {
+      return canvas.toDataURL('image/jpeg', 0.72);
     });
+
     var timeout = new Promise(function (resolve) {
       setTimeout(function () { resolve(null); }, CAPTURE_TIMEOUT);
     });
