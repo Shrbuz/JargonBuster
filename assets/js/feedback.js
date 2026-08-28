@@ -2,7 +2,7 @@
    feedback.js · 全站反馈表单（零依赖）
    - 右下角悬浮按钮 → 弹窗
    - 自动带当前页面 ID（location.hash / pathname）+ 页面标题
-   - 打开弹窗即自动截图并显示预览（可重新截图）
+   - 打开弹窗即自动截图并显示预览（可重新截图，点击预览图可放大）
    - POST 到反馈收信服务；本地(localhost)自动指向 127.0.0.1:8899
    挂载：无（自执行注入 DOM）
    ============================================================ */
@@ -15,9 +15,10 @@
   var ENDPOINT = isLocal ? 'http://127.0.0.1:8899/feedback/' : '/feedback/';
   var PAGE_ID = (W.location.hash || W.location.pathname || '/') || 'home';
   var PAGE_TITLE = doc.title || '';
-  var CAPTURE_TIMEOUT = 8000; // 截图超时（毫秒），避免卡死
+  var CAPTURE_TIMEOUT = 8000; // 截图超时（毫秒）
 
   var fab, modal, pageInput, descInput, contactInput, shotCheck, previewImg, submitBtn, recaptureBtn, shotStatus;
+  var lightbox, lightboxImg;
   var currentShot = null;
 
   var SVG_MSG =
@@ -73,7 +74,7 @@
     shotBar.appendChild(shotStatus);
     shotBar.appendChild(recaptureBtn);
 
-    previewImg = h('img', 'feedback-preview', { alt: '截图预览', hidden: '' });
+    previewImg = h('img', 'feedback-preview', { alt: '截图预览，点击放大', hidden: '' });
 
     body.appendChild(fieldPage);
     body.appendChild(fieldDesc);
@@ -98,8 +99,14 @@
     card.appendChild(foot);
     modal.appendChild(card);
 
+    // 灯箱：点击预览图放大查看
+    lightbox = h('div', 'feedback-lightbox', { hidden: '' });
+    lightboxImg = h('img', '', { alt: '截图放大' });
+    lightbox.appendChild(lightboxImg);
+
     doc.body.appendChild(fab);
     doc.body.appendChild(modal);
+    doc.body.appendChild(lightbox);
 
     fab.addEventListener('click', open);
     modal.addEventListener('click', function (e) { if (e.target === modal) close(); });
@@ -107,6 +114,8 @@
     cancelBtn.addEventListener('click', close);
     submitBtn.addEventListener('click', submit);
     recaptureBtn.addEventListener('click', doCapture);
+    previewImg.addEventListener('click', openLightbox);
+    lightbox.addEventListener('click', closeLightbox);
     shotCheck.addEventListener('change', function () {
       if (shotCheck.checked) doCapture();
       else { currentShot = null; shotStatus.textContent = ''; previewImg.setAttribute('hidden', ''); previewImg.removeAttribute('src'); }
@@ -130,27 +139,29 @@
     currentShot = null;
   }
 
+  function openLightbox() {
+    if (!previewImg.getAttribute('src')) return;
+    lightboxImg.src = previewImg.src;
+    lightbox.removeAttribute('hidden');
+  }
+
+  function closeLightbox() {
+    lightbox.setAttribute('hidden', '');
+    lightboxImg.removeAttribute('src');
+  }
+
   /* 整页截图（JPEG 压缩 + 限宽限高 + 超时），失败返回 null 不阻塞提交 */
   function captureShot() {
-    console.log('[反馈截图] captureShot 开始, STD_EXPORT存在:', !!W.STD_EXPORT);
     if (!W.STD_EXPORT) return Promise.resolve(null);
-    // 抓 .app 主容器（排除 head / 反馈弹窗 / 悬浮按钮），fallback 到 body
     var target = doc.querySelector('.app') || doc.body;
-    console.log('[反馈截图] 截图目标:', target.tagName + '.' + (target.className || ''), '| rect:', target.getBoundingClientRect().width + 'x' + target.getBoundingClientRect().height, '| scroll:', target.scrollWidth + 'x' + target.scrollHeight);
     doc.body.classList.add('is-capturing');
     var p = W.STD_EXPORT.nodeToDataUrl(target, {
       fullPage: true, format: 'image/jpeg', quality: 0.72, maxWidth: 1600, maxHeight: 3000
     });
     var timeout = new Promise(function (resolve) {
-      setTimeout(function () { console.warn('[反馈截图] ⚠️ 超时(8s)，返回null'); resolve(null); }, CAPTURE_TIMEOUT);
+      setTimeout(function () { resolve(null); }, CAPTURE_TIMEOUT);
     });
-    return Promise.race([p, timeout]).then(function (r) {
-      console.log('[反馈截图] captureShot 结果:', r ? ('成功 dataURL长度=' + r.length) : '失败/超时(null)');
-      return r;
-    }).catch(function (e) {
-      console.error('[反馈截图] captureShot 异常:', e);
-      return null;
-    }).finally(function () {
+    return Promise.race([p, timeout]).catch(function () { return null; }).finally(function () {
       doc.body.classList.remove('is-capturing');
     });
   }
@@ -167,7 +178,7 @@
         currentShot = shot;
         previewImg.src = shot;
         previewImg.removeAttribute('hidden');
-        shotStatus.textContent = '已截图 ✓';
+        shotStatus.textContent = '已截图 ✓（点击可放大）';
       } else {
         shotStatus.textContent = '截图失败，将不带截图提交（可点重新截图）';
       }
@@ -201,7 +212,7 @@
     submitBtn.disabled = true;
     submitBtn.textContent = '提交中…';
 
-    // 提交时不再重新截图（避免弹窗闪烁）：用打开时已截好的，没有就不带截图
+    // 提交时用打开弹窗时已截好的图，没有就不带截图
     if (shotCheck.checked && currentShot) {
       payload.shot = currentShot;
     }

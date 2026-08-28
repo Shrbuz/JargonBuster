@@ -9,8 +9,6 @@
 (function (W) {
   'use strict';
 
-  var LOG = '[反馈截图]';
-
   function isEl(n) { return n && n.nodeType === 1; }
 
   /* 把某个元素的 ::before / ::after 物化为真实节点（含可见样式的才物化） */
@@ -80,7 +78,6 @@
   /* 把空元素自闭合：<input ...> → <input .../>，避免 XML 解析失败 */
   function selfCloseVoid(html) {
     return html.replace(VOID_REGEX, function (match, tag, attrs) {
-      // 已经是自闭合 <tag .../> 就不动
       if (attrs.charAt(attrs.length - 1) === '/') return match;
       return '<' + tag + attrs + '/>';
     });
@@ -117,18 +114,13 @@
       if (maxHeight > 0 && h > maxHeight) h = maxHeight;
       if (maxWidth > 0 && w * scale > maxWidth) scale = maxWidth / w;
       scale = Math.min(3, Math.max(0.2, scale));
-      console.log(LOG, '①尺寸计算', { node: node.tagName + '.' + (node.className || ''), rectW: rect.width, rectH: rect.height, scrollW: node.scrollWidth, scrollH: node.scrollHeight, finalW: w, finalH: h, scale: scale });
 
-      var t0 = Date.now();
       var clone = buildClone(node);
-      console.log(LOG, '②克隆完成', {耗时ms: Date.now() - t0, 克隆子元素数: clone.querySelectorAll('*').length});
-      // 显式尺寸放到样式串末尾，确保覆盖计算样式里的 width/height
       var existingStyle = clone.getAttribute('style') || '';
       clone.setAttribute('style', existingStyle + (existingStyle ? ';' : '') + 'width:' + w + 'px;height:' + h + 'px;');
 
       // 关键三步：转义 & → 空元素自闭合 → 才能塞进 SVG(XML)
       var html = selfCloseVoid(escapeAmp(clone.outerHTML));
-      console.log(LOG, '②③HTML预处理完成', { html字节数: html.length });
 
       var svg =
         '<svg xmlns="http://www.w3.org/2000/svg" width="' + w + '" height="' + h + '">' +
@@ -137,12 +129,9 @@
           '</foreignObject>' +
         '</svg>';
       var url = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
-      console.log(LOG, '③SVG生成', { svg字节数: svg.length, dataURL字节数: url.length });
 
       var img = new W.Image();
-      var t1 = Date.now();
       img.onload = function () {
-        console.log(LOG, '④图片加载完成', {耗时ms: Date.now() - t1, naturalW: img.naturalWidth, naturalH: img.naturalHeight});
         try {
           var canvas = W.document.createElement('canvas');
           canvas.width = Math.max(1, Math.round(w * scale));
@@ -151,19 +140,10 @@
           ctx.clearRect(0, 0, canvas.width, canvas.height);
           ctx.scale(scale, scale);
           ctx.drawImage(img, 0, 0);
-          var result = canvas.toDataURL(format, quality);
-          console.log(LOG, '⑤绘制完成', { canvasW: canvas.width, canvasH: canvas.height, dataURL字节数: result.length, 总耗时ms: Date.now() - t0 });
-          resolve(result);
-        } catch (e) {
-          console.error(LOG, '⑤绘制失败', e);
-          reject(e);
-        }
+          resolve(canvas.toDataURL(format, quality));
+        } catch (e) { reject(e); }
       };
-      img.onerror = function (e) {
-        console.error(LOG, '④图片加载失败(SVG渲染失败)', {耗时ms: Date.now() - t1, event: e});
-        console.error(LOG, '失败SVG前3000字符:\n', svg.substring(0, 3000));
-        reject(new Error('SVG 渲染失败'));
-      };
+      img.onerror = function () { reject(new Error('SVG 渲染失败')); };
       img.src = url;
     });
   }
