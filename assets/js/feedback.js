@@ -2,7 +2,7 @@
    feedback.js · 全站反馈表单（零依赖）
    - 右下角悬浮按钮 → 弹窗
    - 自动带当前页面 ID（location.hash / pathname）+ 页面标题
-   - 打开弹窗即自动整页截图并显示预览（可重新截图）
+   - 打开弹窗即自动截图并显示预览（可重新截图）
    - POST 到反馈收信服务；本地(localhost)自动指向 127.0.0.1:8899
    挂载：无（自执行注入 DOM）
    ============================================================ */
@@ -15,6 +15,7 @@
   var ENDPOINT = isLocal ? 'http://127.0.0.1:8899/feedback/' : '/feedback/';
   var PAGE_ID = (W.location.hash || W.location.pathname || '/') || 'home';
   var PAGE_TITLE = doc.title || '';
+  var CAPTURE_TIMEOUT = 8000; // 截图超时（毫秒），避免卡死
 
   var fab, modal, pageInput, descInput, contactInput, shotCheck, previewImg, submitBtn, recaptureBtn, shotStatus;
   var currentShot = null;
@@ -129,13 +130,19 @@
     currentShot = null;
   }
 
-  /* 整页截图（JPEG 压缩 + 限宽），失败返回 null 不阻塞提交 */
+  /* 整页截图（JPEG 压缩 + 限宽限高 + 超时），失败返回 null 不阻塞提交 */
   function captureShot() {
     if (!W.STD_EXPORT) return Promise.resolve(null);
-    doc.body.classList.add('is-capturing'); // 截图里不出现反馈按钮/弹窗本身
-    return W.STD_EXPORT.nodeToDataUrl(doc.documentElement, {
-      fullPage: true, format: 'image/jpeg', quality: 0.72, maxWidth: 1600
-    }).catch(function () { return null; }).finally(function () {
+    // 抓 .app 主容器（排除 head / 反馈弹窗 / 悬浮按钮），fallback 到 body
+    var target = doc.querySelector('.app') || doc.body;
+    doc.body.classList.add('is-capturing');
+    var p = W.STD_EXPORT.nodeToDataUrl(target, {
+      fullPage: true, format: 'image/jpeg', quality: 0.72, maxWidth: 1600, maxHeight: 3000
+    });
+    var timeout = new Promise(function (resolve) {
+      setTimeout(function () { resolve(null); }, CAPTURE_TIMEOUT);
+    });
+    return Promise.race([p, timeout]).catch(function () { return null; }).finally(function () {
       doc.body.classList.remove('is-capturing');
     });
   }
@@ -186,39 +193,28 @@
     submitBtn.disabled = true;
     submitBtn.textContent = '提交中…';
 
-    var finish = function (shot) {
-      if (shot) {
-        payload.shot = shot;
-        if (!previewImg.getAttribute('src')) {
-          previewImg.src = shot;
-          previewImg.removeAttribute('hidden');
-        }
-      }
-      post(payload).then(function (res) {
-        submitBtn.disabled = false;
-        submitBtn.textContent = '提交反馈';
-        if (res && res.ok) {
-          if (W.STD_UTIL) W.STD_UTIL.toast('已收到，感谢反馈！');
-          descInput.value = '';
-          contactInput.value = '';
-          close();
-        } else {
-          var msg = (res && res.error) || '提交失败，请稍后再试';
-          if (W.STD_UTIL) W.STD_UTIL.toast(msg);
-        }
-      }).catch(function () {
-        submitBtn.disabled = false;
-        submitBtn.textContent = '提交反馈';
-        if (W.STD_UTIL) W.STD_UTIL.toast('网络异常，提交失败');
-      });
-    };
-
-    if (shotCheck.checked) {
-      if (currentShot) finish(currentShot);
-      else captureShot().then(finish);
-    } else {
-      finish(null);
+    // 提交时不再重新截图（避免弹窗闪烁）：用打开时已截好的，没有就不带截图
+    if (shotCheck.checked && currentShot) {
+      payload.shot = currentShot;
     }
+
+    post(payload).then(function (res) {
+      submitBtn.disabled = false;
+      submitBtn.textContent = '提交反馈';
+      if (res && res.ok) {
+        if (W.STD_UTIL) W.STD_UTIL.toast('已收到，感谢反馈！');
+        descInput.value = '';
+        contactInput.value = '';
+        close();
+      } else {
+        var msg = (res && res.error) || '提交失败，请稍后再试';
+        if (W.STD_UTIL) W.STD_UTIL.toast(msg);
+      }
+    }).catch(function () {
+      submitBtn.disabled = false;
+      submitBtn.textContent = '提交反馈';
+      if (W.STD_UTIL) W.STD_UTIL.toast('网络异常，提交失败');
+    });
   }
 
   build();

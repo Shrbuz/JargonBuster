@@ -68,12 +68,13 @@
 
   /**
    * 把 node 渲染为图片 dataURL（不触发下载）。
-   * @param {Element} node 要绘制的根元素（反馈截图传 document.documentElement）
+   * @param {Element} node 要绘制的根元素
    * @param {Object} [opts]
    *   format: 'image/png' | 'image/jpeg'（默认 png）
    *   quality: JPEG 质量 0~1（默认 0.92）
    *   fullPage: 为 true 时按文档滚动尺寸绘制整页（默认按节点自身盒尺寸）
    *   maxWidth: 输出宽度上限（px），超过则整体等比缩小（默认不限）
+   *   maxHeight: 输出高度上限（px），超过则截断（默认不限）
    *   scale: 基础倍率（默认 2；受 maxWidth 约束）
    * @returns {Promise<string>} dataURL
    */
@@ -82,6 +83,7 @@
     var format = opts.format || 'image/png';
     var quality = opts.quality != null ? opts.quality : 0.92;
     var maxWidth = opts.maxWidth || 0;
+    var maxHeight = opts.maxHeight || 0;
     var scale = opts.scale || 2;
     return new Promise(function (resolve, reject) {
       if (!node) { reject(new Error('node 为空')); return; }
@@ -92,6 +94,7 @@
         w = Math.max(w, Math.round(node.scrollWidth || w));
         h = Math.max(h, Math.round(node.scrollHeight || h));
       }
+      if (maxHeight > 0 && h > maxHeight) h = maxHeight;
       if (maxWidth > 0 && w * scale > maxWidth) scale = maxWidth / w;
       scale = Math.min(3, Math.max(0.2, scale));
 
