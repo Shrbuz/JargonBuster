@@ -4241,7 +4241,7 @@
       '入场动画越炫越好？入场动画是引导不是炫技，300-500ms 淡入/上浮就够了，弹跳/旋转/缩放过度会显得不专业。',
       '入场动画页面加载时全部触发？长列表应该滚动入场（进入视口才触发），全部同时触发不仅浪费性能，用户也看不到下面的动画。'
     ],
-    related: ['css-transition', 'interactive-states', 'pulse-animation', 'hover-effect']
+    related: ['css-transition', 'interactive-states', 'pulse-animation', 'transition-animation']
   },
   {
     id: 'pulse-animation',
