@@ -80,6 +80,26 @@
     });
     html += '</div>';
 
+    /* 图鉴速查入口 */
+    html += '<h2 class="section-label">图鉴速查</h2><div class="gallery-entries">' +
+      '<a class="visual-entry" href="#/visuals">' +
+        '<span class="visual-entry-badge">元素</span>' +
+        '<span class="visual-entry-body">' +
+          '<strong>前端元素图鉴</strong>' +
+          '<span>界面元素长什么样、规范名叫什么——看着样子记名字，拿着名字去沟通</span>' +
+        '</span>' +
+        '<span class="visual-entry-arrow">→</span>' +
+      '</a>' +
+      '<a class="visual-entry" href="#/styles">' +
+        '<span class="visual-entry-badge">风格</span>' +
+        '<span class="visual-entry-body">' +
+          '<strong>UI 风格图鉴</strong>' +
+          '<span>认全主流视觉风格的气质与特征，拿着一句准确的话让 AI 还原风格</span>' +
+        '</span>' +
+        '<span class="visual-entry-arrow">→</span>' +
+      '</a>' +
+    '</div>';
+
     /* 学习路线 */
     html += '<h2 class="section-label">学习路线</h2>';
     PATHS.forEach(function (path) {
@@ -255,7 +275,7 @@
       '<p class="define-card">' + esc(t.summary) + '</p>' +
 
       (visuals.length
-        ? '<p class="term-visual-row"><span>可视化图鉴：</span>' +
+        ? '<p class="term-visual-row"><span>前端元素图鉴：</span>' +
           visuals.map(function (v) {
             return '<a class="vs-term-link" href="#/visuals/' + encodeURIComponent(v.group.id) + '/' + encodeURIComponent(v.item.id) + '">' +
               esc(v.item.name) + '<span class="vs-en">' + esc(v.group.name) + '</span></a>';
@@ -356,9 +376,10 @@
     var D = W.STD_DATA;
     var results = W.STD_SEARCH.search(query);
     var vres = W.STD_SEARCH.searchVisuals ? W.STD_SEARCH.searchVisuals(query) : [];
+    var sres = W.STD_SEARCH.searchStyles ? W.STD_SEARCH.searchStyles(query) : [];
 
     function visualSection(list) {
-      return '<h2 class="group-title">可视化图鉴<span class="n">' + list.length + '</span></h2>' +
+      return '<h2 class="group-title">前端元素图鉴<span class="n">' + list.length + '</span></h2>' +
         '<div class="vs-match-list">' + list.map(function (r) {
           return '<a class="vs-match" href="#/visuals/' + encodeURIComponent(r.group.id) + '/' + encodeURIComponent(r.item.id) + '">' +
             W.STD_SEARCH.highlight(r.item.name, query) +
@@ -366,11 +387,21 @@
         }).join('') + '</div>';
     }
 
+    function styleSection(list) {
+      return '<h2 class="group-title">UI 风格图鉴<span class="n">' + list.length + '</span></h2>' +
+        '<div class="vs-match-list">' + list.map(function (r) {
+          return '<a class="vs-match" href="#/styles/' + encodeURIComponent(r.style.id) + '">' +
+            W.STD_SEARCH.highlight(r.style.name, query) +
+            '<span class="g">' + esc(r.style.en) + '</span></a>';
+        }).join('') + '</div>';
+    }
+
     var html =
       '<header class="page-head">' +
         '<h1 class="page-title">搜索：“' + esc(query) + '”</h1>' +
         '<p class="page-sub">共找到 ' + results.length + ' 个相关词条' +
-          (vres.length ? '、' + vres.length + ' 个图鉴元素' : '') + '</p>' +
+          (vres.length ? '、' + vres.length + ' 个图鉴元素' : '') +
+          (sres.length ? '、' + sres.length + ' 个 UI 风格' : '') + '</p>' +
       '</header>';
 
     if (!results.length) {
@@ -382,6 +413,7 @@
           '<a class="btn btn-primary" href="#/">返回首页</a>' +
         '</div>';
       if (vres.length) html += visualSection(vres);
+      if (sres.length) html += styleSection(sres);
       html +=
         '<h2 class="section-label">不如先看看这些</h2>' +
         '<div class="term-grid">' + sugg.map(function (t) { return C.termCard(t); }).join('') + '</div>';
@@ -400,6 +432,7 @@
     });
 
     if (vres.length) html += visualSection(vres);
+    if (sres.length) html += styleSection(sres);
 
     return { title: '搜索 ' + query + ' · 标准术语', html: html, mount: null };
   }
@@ -645,6 +678,156 @@
     return { title: group.name + ' · 前端可视化标准术语', html: html, mount: mount };
   }
 
+  /* ================= UI 风格图鉴 ================= */
+
+  var _styleMap = null;
+  function styleById(id) {
+    if (!_styleMap) {
+      _styleMap = {};
+      (W.STD_UI_STYLES || []).forEach(function (s) { _styleMap[s.id] = s; });
+    }
+    return _styleMap[id] || null;
+  }
+
+  function renderStyleIndex() {
+    var styles = W.STD_UI_STYLES || [];
+    var kitFn = W.STD_STYLE_DEMO_KIT;
+
+    var html =
+      '<nav class="breadcrumb" aria-label="面包屑">' +
+        '<a href="#/">首页</a><span class="sep">/</span><span class="here">UI 风格图鉴</span>' +
+      '</nav>' +
+      '<header class="page-head">' +
+        '<h1 class="page-title">UI 风格图鉴</h1>' +
+        '<p class="page-sub">跟 AI 说「好看一点」「高级一点」，注定收到一份随机风格的稿子。这里把常见 UI 风格做成标本：同一套组件、多种风格渲染，风格差异一眼可比；每个风格都配特征清单和能直接发给 AI 的原话——风格这样描述，AI 才能一次还原。</p>' +
+      '</header>' +
+      '<div class="sty-grid">';
+
+    styles.forEach(function (s) {
+      html +=
+        '<a class="sty-card" href="#/styles/' + encodeURIComponent(s.id) + '">' +
+          '<div class="sty-card-head">' +
+            '<span class="sty-card-name">' + esc(s.name) + '</span>' +
+            '<span class="sty-card-en">' + esc(s.en) + '</span>' +
+          '</div>' +
+          (kitFn ? '<div class="sty-card-stage">' + kitFn(s.id, true) + '</div>' : '') +
+          '<p class="sty-card-summary">' + esc(s.summary) + '</p>' +
+        '</a>';
+    });
+
+    html += '</div>';
+    return { title: 'UI 风格图鉴 · 标准术语', html: html, mount: null };
+  }
+
+  /* related 取值解析：'term:x' 词条 · 'visual:组/元素' 元素标本 · 纯 id 先风格后词条 */
+  function resolveStyleRelated(s) {
+    var D = W.STD_DATA;
+    var styles = [], terms = [], visuals = [];
+    (s.related || []).forEach(function (r) {
+      if (r.indexOf('term:') === 0) {
+        var t = D.termMap.get(r.slice(5));
+        if (t) terms.push(t);
+        return;
+      }
+      if (r.indexOf('visual:') === 0) {
+        var seg = r.slice(7).split('/');
+        var g = null, it = null;
+        (W.STD_VISUAL_GROUPS || []).forEach(function (grp) {
+          if (grp.id === seg[0]) {
+            g = grp;
+            grp.items.forEach(function (x) { if (x.id === seg[1]) it = x; });
+          }
+        });
+        if (g && it) visuals.push({ group: g, item: it });
+        return;
+      }
+      if (r === s.id) return; // 不自链
+      var st = styleById(r);
+      if (st) { styles.push(st); return; }
+      var t2 = D.termMap.get(r);
+      if (t2) terms.push(t2);
+    });
+    return { styles: styles, terms: terms, visuals: visuals };
+  }
+
+  function renderStyleDetail(id) {
+    var s = styleById(id);
+    if (!s) return null;
+    var DEMOS = W.STD_STYLE_DEMOS || {};
+    var demoFn = DEMOS[s.demo];
+    var rel = resolveStyleRelated(s);
+
+    var html =
+      '<nav class="breadcrumb" aria-label="面包屑">' +
+        '<a href="#/">首页</a><span class="sep">/</span>' +
+        '<a href="#/styles">UI 风格图鉴</a><span class="sep">/</span>' +
+        '<span class="here">' + esc(s.name) + '</span>' +
+      '</nav>' +
+      '<header class="page-head">' +
+        '<h1 class="page-title">' + esc(s.name) + '<span class="vs-en" style="margin-left:8px">' + esc(s.en) + '</span></h1>' +
+        '<p class="page-sub">' + esc(s.summary) + '</p>' +
+        '<div class="sty-meta">' +
+          '<span class="sty-era">' + esc(s.era) + '</span>' +
+          (s.represents || []).map(function (r) { return '<span class="sty-rep">' + esc(r) + '</span>'; }).join('') +
+        '</div>' +
+      '</header>' +
+
+      '<div class="vs-stage">' + (demoFn ? demoFn() : '<span class="vs-missing">风格小样待补充</span>') + '</div>' +
+
+      '<h2 class="section-label">风格特征</h2>' +
+      '<div class="sty-features">' +
+        (s.features || []).map(function (f) { return '<span class="sty-feature">' + esc(f) + '</span>'; }).join('') +
+      '</div>' +
+
+      '<h2 class="section-label">代码要点</h2>' +
+      '<pre class="sty-css">' + esc(s.cssHint) + '</pre>' +
+
+      '<h2 class="section-label">怎么对 AI 说</h2>' +
+      '<div class="talk-wrap">' +
+        ((s.aiTalk && s.aiTalk.good && s.aiTalk.good.length)
+          ? '<div class="talk-col talk-good"><h4>' + ICONS.check + '这样说，AI 秒懂</h4><ul class="talk-list">' +
+            s.aiTalk.good.map(talkItemGood).join('') + '</ul></div>'
+          : '') +
+        ((s.aiTalk && s.aiTalk.bad && s.aiTalk.bad.length)
+          ? '<div class="talk-col talk-bad"><h4>' + ICONS.cross + '别说成这样</h4><ul class="talk-list">' +
+            s.aiTalk.bad.map(talkItemBad).join('') + '</ul></div>'
+          : '') +
+      '</div>';
+
+    if (rel.styles.length || rel.terms.length || rel.visuals.length) {
+      html += '<h2 class="section-label">相关内容</h2><div class="sty-related">';
+      rel.styles.forEach(function (st) {
+        html += '<a class="vs-match" href="#/styles/' + encodeURIComponent(st.id) + '">' +
+          esc(st.name) + '<span class="g">' + esc(st.en) + '</span></a>';
+      });
+      rel.terms.forEach(function (t) {
+        html += '<a class="vs-match" href="#/t/' + encodeURIComponent(t.id) + '">词条：' + esc(t.zh) +
+          '<span class="g">' + esc(t.en) + '</span></a>';
+      });
+      rel.visuals.forEach(function (v) {
+        html += '<a class="vs-match" href="#/visuals/' + encodeURIComponent(v.group.id) + '/' + encodeURIComponent(v.item.id) + '">元素标本：' +
+          esc(v.item.name) + '<span class="g">' + esc(v.group.name) + '</span></a>';
+      });
+      html += '</div>';
+    }
+
+    var mount = function (root) {
+      /* 复制按钮：容器持久存在，只绑定一次，避免监听器叠加 */
+      if (!root.dataset.copyBound) {
+        root.dataset.copyBound = '1';
+        root.addEventListener('click', function (e) {
+          var btn = e.target.closest('[data-copy]');
+          if (!btn) return;
+          W.STD_UTIL.copyText(btn.getAttribute('data-copy')).then(function (ok) {
+            W.STD_UTIL.toast(ok ? '已复制，去粘贴给 AI 吧' : '复制失败，请手动选择文本');
+          });
+        });
+      }
+    };
+
+    return { title: s.name + ' · UI 风格图鉴 · 标准术语', html: html, mount: mount };
+  }
+
   /* ================= 关于页 ================= */
 
   var TERM_TEMPLATE = [
@@ -744,6 +927,8 @@
     favs: renderFavs,
     visuals: renderVisualIndex,
     visualGroup: renderVisualGroup,
+    styles: renderStyleIndex,
+    style: renderStyleDetail,
     about: renderAbout,
     notFound: renderNotFound
   };

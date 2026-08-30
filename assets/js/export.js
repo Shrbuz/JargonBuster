@@ -1,9 +1,10 @@
 /* ============================================================
-   export.js · DOM 节点导出为 PNG（零依赖）
+   export.js · DOM 节点导出为 PNG
    把任意 DOM 元素（如可视化容器的 .vs-stage）绘制为 PNG 并触发下载。
-   实现思路：深度克隆 + 逐节点内联计算样式（含 ::before/::after 物化为
-   真实节点）→ 序列化为 SVG foreignObject → Image 载入 → 绘制到 2x
-   canvas → toBlob 下载。
+   首选 modern-screenshot（已在页面加载，支持 backdrop-filter / color-mix /
+   CSS filter 等现代特性，渲染一致性远优于手写 SVG foreignObject）；
+   不可用时回退到内置克隆方案（深度克隆 + 内联样式 + 伪元素物化 →
+   SVG foreignObject → canvas）。
    挂载：window.STD_EXPORT
    ============================================================ */
 (function (W) {
@@ -11,14 +12,45 @@
 
   function isEl(n) { return n && n.nodeType === 1; }
 
-  /* 把某个元素的 ::before / ::after 物化为真实节点（含可见样式的才物化） */
+  /* ---------- 方案 A：modern-screenshot（首选） ---------- */
+  function captureWithModernScreenshot(node, opts) {
+    if (!W.modernScreenshot || !W.modernScreenshot.domToCanvas) return Promise.resolve(null);
+    var scale = opts.scale || 2;
+    // 导出前隐藏标记为 data-export-exclude 的节点（如导出按钮本身）
+    var excluded = node.querySelectorAll('[data-export-exclude]');
+    var prevDisplay = [];
+    excluded.forEach(function (n) {
+      prevDisplay.push(n.style.display);
+      n.style.display = 'none';
+    });
+    function restore() {
+      excluded.forEach(function (n, i) {
+        if (prevDisplay[i]) n.style.display = prevDisplay[i];
+        else n.style.removeProperty('display');
+      });
+    }
+    return W.modernScreenshot.domToCanvas(node, {
+      scale: scale,
+      backgroundColor: null,
+      debug: false
+    }).then(function (canvas) {
+      restore();
+      return canvas.toDataURL(opts.format || 'image/png', opts.quality != null ? opts.quality : 0.92);
+    }).catch(function (e) {
+      console.warn('[export] modern-screenshot 失败，回退内置方案:', e);
+      restore();
+      return null;
+    });
+  }
+
+  /* ---------- 方案 B：内置 SVG foreignObject 克隆（兜底） ---------- */
+
   function pseudoNode(src, which) {
     var ps = W.getComputedStyle(src, which);
     if (!ps || ps.display === 'none') return null;
     var content = ps.content || '';
     var isText = content && content !== 'none' && content !== 'normal' && content !== '""' && content !== "''";
     if (!isText) {
-      // content 为空但带着可见盒子（背景/边框/尺寸）→ 仍要物化
       var hasBox =
         (ps.backgroundColor && ps.backgroundColor !== 'transparent' && ps.backgroundColor !== 'rgba(0, 0, 0, 0)') ||
         (ps.backgroundImage && ps.backgroundImage !== 'none') ||
@@ -36,10 +68,8 @@
     return el;
   }
 
-  /* SVG 展示属性列表：这些属性可能写着 var(--xxx)，在 foreignObject 里不解析 */
   var SVG_PRESENTATION_ATTRS = ['fill', 'stroke', 'stop-color', 'flood-color', 'lighting-color', 'color'];
 
-  /* 深度克隆 + 内联计算样式 + 伪元素物化 + 清理导出标记 */
   function buildClone(srcRoot) {
     var dstRoot = srcRoot.cloneNode(true);
 
@@ -50,18 +80,14 @@
         var styleText = cs.cssText;
         dst.setAttribute('style', (dst.getAttribute('style') || '') + styleText);
 
-        // 修复1：position: fixed/sticky 在 foreignObject 里定位错乱，转 relative 跟随文档流
         var pos = cs.getPropertyValue('position');
         if (pos === 'fixed' || pos === 'sticky') {
           dst.style.position = 'relative';
         }
 
-        // 修复2：overflow 不为 visible 会裁剪内容，整页截图需要全部可见
         if (cs.getPropertyValue('overflow-y') !== 'visible') dst.style.overflowY = 'visible';
         if (cs.getPropertyValue('overflow-x') !== 'visible') dst.style.overflowX = 'visible';
 
-        // 修复3：SVG 元素的 fill/stroke 等属性可能写着 var(--accent)，
-        // foreignObject 里没有 :root 变量，用计算样式的实际值覆盖
         if (src.namespaceURI === 'http://www.w3.org/2000/svg') {
           SVG_PRESENTATION_ATTRS.forEach(function (prop) {
             var val = cs.getPropertyValue(prop);
@@ -71,7 +97,6 @@
       }
 
       var n = src.children.length;
-      // 先按原结构递归子元素（此时 dst 尚未插入伪元素，索引一一对应）
       for (var i = 0; i < n; i++) walk(src.children[i], dst.children[i]);
       var before = pseudoNode(src, '::before');
       var after = pseudoNode(src, '::after');
@@ -81,10 +106,8 @@
 
     walk(srcRoot, dstRoot);
 
-    // 剔除导出按钮等无需进图的节点
     dstRoot.querySelectorAll('[data-export-exclude]').forEach(function (n) { n.remove(); });
 
-    // foreignObject 按 XML 解析，内联 SVG 必须带命名空间
     dstRoot.querySelectorAll('svg').forEach(function (s) {
       if (!s.getAttribute('xmlns')) s.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
     });
@@ -92,16 +115,13 @@
     return dstRoot;
   }
 
-  /* HTML 空元素（void element）列表：outerHTML 不闭合它们，但 SVG(XML) 要求闭合 */
   var VOID_TAGS = 'area|base|br|col|embed|hr|img|input|link|meta|param|source|track|wbr';
   var VOID_REGEX = new RegExp('<(' + VOID_TAGS + ')([\\s\\S]*?)>', 'gi');
 
-  /* 把 HTML 字符串中未转义的 & 转成 &amp;（SVG 是严格 XML） */
   function escapeAmp(html) {
     return html.replace(/&(?!(?:amp|lt|gt|quot|apos|#\d+|#x[0-9a-fA-F]+);)/g, '&amp;');
   }
 
-  /* 把空元素自闭合：<input ...> → <input .../>，避免 XML 解析失败 */
   function selfCloseVoid(html) {
     return html.replace(VOID_REGEX, function (match, tag, attrs) {
       if (attrs.charAt(attrs.length - 1) === '/') return match;
@@ -109,20 +129,7 @@
     });
   }
 
-  /**
-   * 把 node 渲染为图片 dataURL（不触发下载）。
-   * @param {Element} node 要绘制的根元素
-   * @param {Object} [opts]
-   *   format: 'image/png' | 'image/jpeg'（默认 png）
-   *   quality: JPEG 质量 0~1（默认 0.92）
-   *   fullPage: 为 true 时按文档滚动尺寸绘制整页（默认按节点自身盒尺寸）
-   *   maxWidth: 输出宽度上限（px），超过则整体等比缩小（默认不限）
-   *   maxHeight: 输出高度上限（px），超过则截断（默认不限）
-   *   scale: 基础倍率（默认 2；受 maxWidth 约束）
-   * @returns {Promise<string>} dataURL
-   */
-  function nodeToDataUrl(node, opts) {
-    opts = opts || {};
+  function captureWithClone(node, opts) {
     var format = opts.format || 'image/png';
     var quality = opts.quality != null ? opts.quality : 0.92;
     var maxWidth = opts.maxWidth || 0;
@@ -145,7 +152,6 @@
       var existingStyle = clone.getAttribute('style') || '';
       clone.setAttribute('style', existingStyle + (existingStyle ? ';' : '') + 'width:' + w + 'px;height:' + h + 'px;');
 
-      // 关键三步：转义 & → 空元素自闭合 → 才能塞进 SVG(XML)
       var html = selfCloseVoid(escapeAmp(clone.outerHTML));
 
       var svg =
@@ -171,6 +177,22 @@
       };
       img.onerror = function () { reject(new Error('SVG 渲染失败')); };
       img.src = url;
+    });
+  }
+
+  /* ---------- 统一入口 ---------- */
+
+  /**
+   * 把 node 渲染为图片 dataURL（不触发下载）。
+   * 首选 modern-screenshot，失败回退内置克隆方案。
+   */
+  function nodeToDataUrl(node, opts) {
+    opts = opts || {};
+    // 方案 A：modern-screenshot
+    return captureWithModernScreenshot(node, opts).then(function (dataUrl) {
+      if (dataUrl) return dataUrl;
+      // 方案 B：内置克隆（兜底）
+      return captureWithClone(node, opts);
     });
   }
 

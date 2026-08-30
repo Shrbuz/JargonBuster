@@ -52,7 +52,10 @@
       '</nav>' +
       '<p class="side-label" style="margin-top:var(--s5)">图鉴</p><nav class="side-list">' +
         '<a class="side-link' + (activeKey === 'visuals' ? ' active' : '') + '" href="#/visuals" title="常见界面元素的呈现效果速查">' +
-          W.STD_UTIL.ICONS.eye + '<span>可视化图鉴</span>' +
+          W.STD_UTIL.ICONS.eye + '<span>前端元素图鉴</span>' +
+        '</a>' +
+        '<a class="side-link' + (activeKey === 'styles' ? ' active' : '') + '" href="#/styles" title="主流 UI 视觉风格与 AI 沟通句式">' +
+          W.STD_UTIL.ICONS.palette + '<span>UI 风格图鉴</span>' +
         '</a>' +
       '</nav>' +
       '<p class="side-label" style="margin-top:var(--s5)">分类导航</p><nav class="side-list">';
@@ -244,6 +247,8 @@
         activeKey = 'favs';
       } else if (route.name === 'visualIndex' || route.name === 'visualGroup') {
         activeKey = 'visuals';
+      } else if (route.name === 'styleIndex' || route.name === 'styleDetail') {
+        activeKey = 'styles';
       }
       renderSidebar(activeKey);
     });

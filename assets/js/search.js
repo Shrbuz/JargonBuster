@@ -90,6 +90,33 @@
     return out;
   }
 
+  /** UI 风格图鉴检索：标准名 / 英文 / 别名 / 代表产品 / 特征 / 一句话简介，与图鉴元素同样 AND 语义、累计分排序 */
+  function searchStyles(query) {
+    var tokens = tokenize(query);
+    if (!tokens.length || !W.STD_UI_STYLES) return [];
+    var out = [];
+    W.STD_UI_STYLES.forEach(function (s) {
+      var aliases = (s.aliases || []).join('\n');
+      var represents = (s.represents || []).join('\n');
+      var features = (s.features || []).join('\n');
+      var total = 0;
+      for (var i = 0; i < tokens.length; i++) {
+        var tok = tokens[i];
+        var best = fieldScore(s.name, tok, 100);
+        best = Math.max(best, fieldScore(s.en, tok, 90));
+        best = Math.max(best, fieldScore(aliases, tok, 80));
+        best = Math.max(best, fieldScore(represents, tok, 55));
+        best = Math.max(best, fieldScore(features, tok, 45));
+        best = Math.max(best, fieldScore(s.summary, tok, 40));
+        if (best === 0) { total = 0; break; } // AND 语义
+        total += best;
+      }
+      if (total > 0) out.push({ style: s, score: total });
+    });
+    out.sort(function (a, b) { return b.score - a.score; });
+    return out;
+  }
+
   /** 将 text 中命中的片段包上 <mark>（安全转义后输出） */
   function highlight(text, query) {
     var raw = String(text == null ? '' : text);
@@ -140,5 +167,5 @@
     return out;
   }
 
-  W.STD_SEARCH = { search: search, searchVisuals: searchVisuals, highlight: highlight, suggestions: suggestions, tokenize: tokenize };
+  W.STD_SEARCH = { search: search, searchVisuals: searchVisuals, searchStyles: searchStyles, highlight: highlight, suggestions: suggestions, tokenize: tokenize };
 })(window);

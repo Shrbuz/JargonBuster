@@ -1,0 +1,465 @@
+/* ============================================================
+   ui-extra.css · UI 风格图鉴（一期）与后续 UI 库图鉴（二期）样式
+   sty-*  = 风格图鉴页面结构
+   stl-*  = 风格小样（同一组件套件 + 18 套皮肤 stl--<id>）
+   皮肤里的高饱和配色 / 渐变 / 模糊属于「风格内容」本身，非装饰滥用。
+   ============================================================ */
+
+/* ---------- 列表页 ---------- */
+
+.sty-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: var(--s4);
+}
+.sty-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s3);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  padding: var(--s4);
+  color: inherit;
+  text-decoration: none;
+  transition: border-color var(--t-fast), box-shadow var(--t-fast), transform var(--t-fast);
+}
+.sty-card:hover { border-color: var(--accent); transform: translateY(-1px); box-shadow: var(--shadow-2); }
+.sty-card-head { display: flex; align-items: baseline; gap: 8px; min-width: 0; }
+.sty-card-name { font-size: var(--fs-md); font-weight: 700; color: var(--text); flex-shrink: 0; }
+.sty-card-en {
+  font-size: var(--fs-xs); color: var(--muted); min-width: 0;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.sty-card-stage {
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  overflow: hidden;
+}
+.sty-card-stage .stl-kit { max-width: 100%; border-radius: 0; }
+.sty-card-summary { font-size: var(--fs-xs); color: var(--muted); line-height: 1.7; margin: 0; }
+
+/* ---------- 详情页 ---------- */
+
+.sty-meta { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s2); margin-top: var(--s3); }
+.sty-era {
+  font-size: var(--fs-xs); color: var(--muted);
+  border: 1px solid var(--line); border-radius: 999px; padding: 3px 10px;
+}
+.sty-rep {
+  font-size: var(--fs-xs); color: var(--accent);
+  background: var(--accent-soft); border-radius: 999px; padding: 3px 10px;
+}
+.sty-features { display: flex; flex-wrap: wrap; gap: 8px; }
+.sty-feature {
+  font-size: var(--fs-xs); color: var(--text);
+  background: var(--surface-2); border: 1px solid var(--line);
+  border-radius: 999px; padding: 4px 12px;
+}
+.sty-css {
+  margin: 0; padding: var(--s3) var(--s4);
+  background: var(--surface-2); border: 1px solid var(--line); border-radius: var(--r-md);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: var(--fs-xs); color: var(--text);
+  overflow-x: auto; white-space: pre-wrap; word-break: break-word;
+}
+.sty-related { display: flex; flex-wrap: wrap; gap: var(--s2); }
+
+/* 首页「图鉴速查」入口组：压缩 .visual-entry 默认外边距，让两张卡成组 */
+.gallery-entries .visual-entry { margin: 0 0 var(--s3); }
+.gallery-entries .visual-entry:last-child { margin-bottom: 0; }
+
+/* ---------- 风格小样 · 公共骨架 ---------- */
+
+.stl-kit {
+  width: 100%;
+  max-width: 360px;              /* 防塌陷：宽容器内保持可读尺寸 */
+  border-radius: 16px;
+  padding: var(--s4);
+  position: relative;
+}
+.stl-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  padding: 20px;
+  border-radius: 14px;
+  position: relative;
+}
+.stl-title { margin: 0; font-size: var(--fs-md); font-weight: 700; }
+.stl-text { margin: 0; font-size: var(--fs-xs); line-height: 1.7; }
+.stl-input {
+  width: 100%;
+  padding: 9px 12px;
+  font-size: var(--fs-sm);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--text);
+  font-family: inherit;
+}
+.stl-actions { display: flex; flex-wrap: wrap; gap: 10px; }
+.stl-btn {
+  padding: 8px 16px;
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  cursor: default;
+  font-family: inherit;
+}
+
+/* 列表页缩略版：紧凑、隐藏正文 */
+.stl-kit--mini { padding: var(--s3); }
+.stl-kit--mini .stl-card { padding: 14px; gap: 8px; border-radius: 10px; }
+.stl-kit--mini .stl-title { font-size: var(--fs-sm); }
+.stl-kit--mini .stl-text { display: none; }
+.stl-kit--mini .stl-input { padding: 6px 10px; font-size: 12px; }
+.stl-kit--mini .stl-btn { padding: 5px 12px; font-size: 12px; }
+.stl-kit--mini .stl-term-line { font-size: 11px; }
+
+/* ---------- 皮肤 1 · 拟物化 ---------- */
+.stl--skeuomorphism { background: linear-gradient(160deg, #7A4F2C, #5B3A1E); }
+.stl--skeuomorphism .stl-card {
+  background: linear-gradient(180deg, #F6ECD9, #E9D8BA);
+  border: 1px solid #B3925F; border-radius: 18px;
+  box-shadow: 0 10px 18px rgba(0, 0, 0, .35), inset 0 1px 0 rgba(255, 255, 255, .6);
+}
+.stl--skeuomorphism .stl-title { color: #5B3A1E; font-family: Georgia, 'Times New Roman', serif; text-shadow: 0 1px 0 rgba(255, 255, 255, .5); }
+.stl--skeuomorphism .stl-text { color: #7A5C36; }
+.stl--skeuomorphism .stl-input {
+  background: #FDF7EA; border: 1px solid #B3925F; border-radius: 10px; color: #5B3A1E;
+  box-shadow: inset 0 2px 4px rgba(91, 58, 30, .25);
+}
+.stl--skeuomorphism .stl-btn { border-radius: 12px; }
+.stl--skeuomorphism .stl-btn-primary {
+  background: linear-gradient(180deg, #B3432B, #8A2F1B); color: #FFE9D2; border: 1px solid #6D2513;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .35), 0 3px 0 #571E0F, 0 5px 8px rgba(0, 0, 0, .3);
+}
+.stl--skeuomorphism .stl-btn-ghost {
+  background: linear-gradient(180deg, #F2E4C8, #E2CDA0); color: #5B3A1E; border: 1px solid #B3925F;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .7), 0 2px 3px rgba(0, 0, 0, .2);
+}
+
+/* ---------- 皮肤 2 · 扁平化 ---------- */
+.stl--flat-design { background: var(--surface-3); }
+.stl--flat-design .stl-card { background: var(--surface); border: 1px solid var(--line-strong); border-radius: 6px; box-shadow: none; }
+.stl--flat-design .stl-title { color: var(--text); letter-spacing: .02em; }
+.stl--flat-design .stl-text { color: var(--muted); }
+.stl--flat-design .stl-input { background: var(--surface-2); border: 1px solid var(--line-strong); border-radius: 4px; color: var(--text); }
+.stl--flat-design .stl-btn { border-radius: 4px; }
+.stl--flat-design .stl-btn-primary { background: #1E88E5; color: #fff; }
+.stl--flat-design .stl-btn-ghost { background: transparent; border-color: #1E88E5; color: #1E88E5; }
+
+/* ---------- 皮肤 3 · Material Design ---------- */
+.stl--material-design { background: #F3EFF5; }
+.stl--material-design .stl-card {
+  background: #FFF; border-radius: 16px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, .12), 0 4px 12px rgba(0, 0, 0, .08);
+}
+.stl--material-design .stl-title { color: #1D1B20; font-weight: 500; }
+.stl--material-design .stl-text { color: #49454F; }
+.stl--material-design .stl-input {
+  background: #E7E0EC; border: none; border-radius: 12px 12px 4px 4px; color: #1D1B20;
+}
+.stl--material-design .stl-btn { border-radius: 999px; font-weight: 500; }
+.stl--material-design .stl-btn-primary { background: #6750A4; color: #fff; box-shadow: 0 1px 3px rgba(103, 80, 164, .4); }
+.stl--material-design .stl-btn-ghost { background: transparent; border-color: #79747E; color: #6750A4; }
+
+/* ---------- 皮肤 4 · Liquid Glass ---------- */
+.stl--liquid-glass {
+  background:
+    radial-gradient(130px 95px at 15% 18%, rgba(94, 234, 212, .9), transparent 70%),
+    radial-gradient(150px 115px at 85% 12%, rgba(129, 140, 248, .9), transparent 70%),
+    radial-gradient(170px 140px at 80% 88%, rgba(244, 114, 182, .85), transparent 70%),
+    linear-gradient(150deg, #312E81, #1E3A8A);
+}
+.stl--liquid-glass .stl-card {
+  background: rgba(255, 255, 255, .12);
+  backdrop-filter: blur(20px) saturate(1.6);
+  -webkit-backdrop-filter: blur(20px) saturate(1.6);
+  border: 1px solid rgba(255, 255, 255, .35); border-radius: 26px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .55), inset 0 -1px 0 rgba(255, 255, 255, .15), 0 12px 32px rgba(15, 23, 42, .35);
+}
+.stl--liquid-glass .stl-title { color: #fff; text-shadow: 0 1px 2px rgba(15, 23, 42, .3); }
+.stl--liquid-glass .stl-text { color: rgba(255, 255, 255, .85); }
+.stl--liquid-glass .stl-input {
+  background: rgba(255, 255, 255, .16); border: 1px solid rgba(255, 255, 255, .3);
+  border-radius: 999px; color: #fff;
+}
+.stl--liquid-glass .stl-input::placeholder { color: rgba(255, 255, 255, .6); }
+.stl--liquid-glass .stl-btn { border-radius: 999px; }
+.stl--liquid-glass .stl-btn-primary {
+  background: rgba(255, 255, 255, .28); color: #fff; border-color: rgba(255, 255, 255, .45);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .5);
+}
+.stl--liquid-glass .stl-btn-ghost { background: rgba(255, 255, 255, .08); color: #fff; border-color: rgba(255, 255, 255, .28); }
+
+/* ---------- 皮肤 5 · 新拟物化 ---------- */
+.stl--neumorphism { background: #E0E5EC; }
+.stl--neumorphism .stl-card {
+  background: #E0E5EC; border-radius: 20px;
+  box-shadow: 8px 8px 16px #C3CBD8, -8px -8px 16px #FDFEFF;
+}
+.stl--neumorphism .stl-title { color: #4A5568; }
+.stl--neumorphism .stl-text { color: #8A94A6; }
+.stl--neumorphism .stl-input {
+  background: #E0E5EC; border: none; border-radius: 12px; color: #4A5568;
+  box-shadow: inset 4px 4px 8px #C3CBD8, inset -4px -4px 8px #FDFEFF;
+}
+.stl--neumorphism .stl-btn { border-radius: 12px; background: #E0E5EC; }
+.stl--neumorphism .stl-btn-primary { color: #5B7CFA; box-shadow: 6px 6px 12px #C3CBD8, -6px -6px 12px #FDFEFF; }
+.stl--neumorphism .stl-btn-ghost { color: #8A94A6; box-shadow: inset 3px 3px 6px #C3CBD8, inset -3px -3px 6px #FDFEFF; }
+
+/* ---------- 皮肤 6 · 玻璃拟态 ---------- */
+.stl--glassmorphism {
+  background:
+    radial-gradient(130px 100px at 20% 22%, rgba(249, 115, 22, .85), transparent 70%),
+    radial-gradient(150px 120px at 82% 18%, rgba(6, 182, 212, .8), transparent 70%),
+    radial-gradient(170px 140px at 75% 85%, rgba(139, 92, 246, .8), transparent 70%),
+    linear-gradient(140deg, #0F766E, #1D4ED8);
+}
+.stl--glassmorphism .stl-card {
+  background: rgba(255, 255, 255, .12);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, .25); border-radius: 18px;
+}
+.stl--glassmorphism .stl-title { color: #fff; }
+.stl--glassmorphism .stl-text { color: rgba(255, 255, 255, .85); }
+.stl--glassmorphism .stl-input {
+  background: rgba(255, 255, 255, .14); border: 1px solid rgba(255, 255, 255, .25);
+  border-radius: 10px; color: #fff;
+}
+.stl--glassmorphism .stl-input::placeholder { color: rgba(255, 255, 255, .55); }
+.stl--glassmorphism .stl-btn { border-radius: 10px; }
+.stl--glassmorphism .stl-btn-primary { background: rgba(255, 255, 255, .22); color: #fff; border-color: rgba(255, 255, 255, .35); }
+.stl--glassmorphism .stl-btn-ghost { background: transparent; color: #fff; border-color: rgba(255, 255, 255, .3); }
+
+/* ---------- 皮肤 7 · 新粗野主义 ---------- */
+.stl--neubrutalism { background: #FFD93D; }
+.stl--neubrutalism .stl-card {
+  background: #FFFDF5; border: 2px solid #000; border-radius: 8px;
+  box-shadow: 6px 6px 0 #000;
+}
+.stl--neubrutalism .stl-title { color: #000; font-weight: 800; letter-spacing: .02em; }
+.stl--neubrutalism .stl-text { color: #333; font-weight: 600; }
+.stl--neubrutalism .stl-input { background: #fff; border: 2px solid #000; border-radius: 6px; color: #000; font-weight: 600; }
+.stl--neubrutalism .stl-btn { border-radius: 6px; font-weight: 700; }
+.stl--neubrutalism .stl-btn-primary { background: #FF6B6B; color: #000; border-color: #000; box-shadow: 3px 3px 0 #000; }
+.stl--neubrutalism .stl-btn-ghost { background: #4D96FF; color: #fff; border-color: #000; box-shadow: 3px 3px 0 #000; }
+
+/* ---------- 皮肤 8 · 瑞士国际主义 ---------- */
+.stl--swiss-style { background: #F4F4F2; border-left: 6px solid #E30613; }
+.stl--swiss-style .stl-card { background: transparent; border: none; border-top: 2px solid #111; border-radius: 0; padding: 16px 0 0; }
+.stl--swiss-style .stl-title { color: #111; font-size: 1.5em; font-weight: 800; letter-spacing: -.02em; line-height: 1.25; }
+.stl--swiss-style .stl-text { color: #444; }
+.stl--swiss-style .stl-input { background: #fff; border: 1px solid #111; border-radius: 0; color: #111; }
+.stl--swiss-style .stl-btn { border-radius: 0; font-weight: 600; letter-spacing: .04em; }
+.stl--swiss-style .stl-btn-primary { background: #E30613; border-color: #E30613; color: #fff; }
+.stl--swiss-style .stl-btn-ghost { background: transparent; border-color: #111; color: #111; }
+
+/* ---------- 皮肤 9 · 日系编辑美学 ---------- */
+.stl--japanese-editorial { background: #F7F5F0; }
+.stl--japanese-editorial .stl-card {
+  background: transparent; border: none; border-top: 1px solid #C9C2B2;
+  border-radius: 0; padding: 16px 28px 0 0;
+}
+.stl--japanese-editorial .stl-title { color: #3E3A34; font-weight: 400; letter-spacing: .12em; }
+.stl--japanese-editorial .stl-text { color: #8A8478; font-weight: 300; line-height: 2; letter-spacing: .06em; }
+.stl--japanese-editorial::after {
+  content: '余白の美';
+  writing-mode: vertical-rl;
+  position: absolute; top: 20px; right: 12px;
+  font-size: 11px; letter-spacing: .35em; color: #A89F8D;
+}
+.stl--japanese-editorial .stl-input {
+  background: transparent; border: none; border-bottom: 1px solid #C9C2B2;
+  border-radius: 0; color: #3E3A34;
+}
+.stl--japanese-editorial .stl-btn { border-radius: 0; font-weight: 400; letter-spacing: .2em; }
+.stl--japanese-editorial .stl-btn-primary { background: #3E3A34; color: #F7F5F0; }
+.stl--japanese-editorial .stl-btn-ghost { background: transparent; border-color: #B4AC9A; color: #6E675B; }
+
+/* ---------- 皮肤 10 · 终端 / CLI ---------- */
+.stl--terminal { background: #0D1117; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+.stl--terminal .stl-card { background: #0D1117; border: 1px solid #30363D; border-radius: 8px; }
+.stl--terminal .stl-title { color: #58A6FF; font-weight: 600; }
+.stl--terminal .stl-title::before { content: '# '; color: #3FB950; }
+.stl--terminal .stl-text { color: #8B949E; }
+.stl--terminal .stl-term-line { color: #3FB950; font-size: var(--fs-xs); }
+.stl--terminal .stl-cursor {
+  display: inline-block; width: .6em; height: 1em;
+  background: #3FB950; margin-left: 2px; vertical-align: text-bottom;
+  animation: stl-blink 1s steps(1) infinite;
+}
+@keyframes stl-blink { 50% { opacity: 0; } }
+.stl--terminal .stl-input {
+  background: #010409; border: 1px solid #30363D; border-radius: 4px; color: #3FB950;
+}
+.stl--terminal .stl-input::placeholder { color: #484F58; }
+.stl--terminal .stl-btn { border-radius: 4px; font-weight: 600; }
+.stl--terminal .stl-btn-primary { background: #238636; border-color: #2EA043; color: #fff; }
+.stl--terminal .stl-btn-ghost { background: transparent; border-color: #30363D; color: #58A6FF; }
+
+/* ---------- 皮肤 11 · 体素 ---------- */
+.stl--voxel {
+  background: conic-gradient(#D9E2EC 25%, #EEF2F7 0 50%, #D9E2EC 0 75%, #EEF2F7 0) 0 0 / 24px 24px;
+}
+.stl--voxel .stl-card {
+  background: #FFD166; border: 4px solid #073B4C; border-radius: 0;
+  box-shadow: inset 0 6px 0 #FFE3A3, inset 0 -6px 0 #E0A93E;
+}
+.stl--voxel .stl-title {
+  align-self: flex-start; background: #073B4C; color: #fff;
+  padding: 2px 10px; font-weight: 800; letter-spacing: .06em;
+}
+.stl--voxel .stl-text { color: #073B4C; font-weight: 700; }
+.stl--voxel .stl-input {
+  background: #FFF; border: 4px solid #073B4C; border-radius: 0; color: #073B4C; font-weight: 700;
+  box-shadow: inset 0 4px 0 #FFE3A3;
+}
+.stl--voxel .stl-btn { border: 4px solid #073B4C; border-radius: 0; font-weight: 800; }
+.stl--voxel .stl-btn-primary { background: #06D6A0; color: #073B4C; box-shadow: inset 0 4px 0 #9BFFDC, inset 0 -4px 0 #059C69; }
+.stl--voxel .stl-btn-ghost { background: #EF476F; color: #fff; box-shadow: inset 0 4px 0 #FF9DB4, inset 0 -4px 0 #C42B50; }
+
+/* ---------- 皮肤 12 · 3D / 插画 ---------- */
+.stl--3d-illustration { background: linear-gradient(160deg, #DBEAFE, #FCE7F3); }
+.stl--3d-illustration .stl-card { background: #FFF; border-radius: 24px; box-shadow: 0 20px 40px rgba(99, 102, 241, .18); }
+.stl--3d-illustration .stl-title { color: #312E81; }
+.stl--3d-illustration .stl-text { color: #64748B; }
+.stl--3d-illustration .stl-input {
+  background: #F1F5F9; border: 2px solid transparent; border-radius: 14px; color: #334155;
+}
+.stl--3d-illustration .stl-btn { border-radius: 14px; font-weight: 700; }
+.stl--3d-illustration .stl-btn-primary {
+  background: linear-gradient(180deg, #818CF8, #6366F1); color: #fff;
+  box-shadow: 0 8px 16px rgba(99, 102, 241, .35), inset 0 1px 0 rgba(255, 255, 255, .4);
+}
+.stl--3d-illustration .stl-btn-ghost { background: #fff; border-color: #C7D2FE; color: #4F46E5; }
+
+/* ---------- 皮肤 13 · 粘土拟态 ---------- */
+.stl--claymorphism { background: #EEF1FF; }
+.stl--claymorphism .stl-card {
+  background: #FFF; border-radius: 26px;
+  box-shadow: 0 18px 36px rgba(99, 102, 241, .22), inset 0 6px 12px #FFF, inset 0 -10px 16px rgba(99, 102, 241, .15);
+}
+.stl--claymorphism .stl-title { color: #4338CA; font-weight: 800; }
+.stl--claymorphism .stl-text { color: #818CF8; }
+.stl--claymorphism .stl-input {
+  background: #F4F5FF; border: 2px solid transparent; border-radius: 16px; color: #4338CA;
+  box-shadow: inset 0 4px 8px rgba(99, 102, 241, .12);
+}
+.stl--claymorphism .stl-btn { border-radius: 18px; font-weight: 700; }
+.stl--claymorphism .stl-btn-primary {
+  background: #8B5CF6; color: #fff;
+  box-shadow: 0 10px 20px rgba(139, 92, 246, .45), inset 0 6px 10px rgba(255, 255, 255, .35), inset 0 -6px 10px rgba(76, 29, 149, .35);
+}
+.stl--claymorphism .stl-btn-ghost {
+  background: #E0E7FF; color: #4338CA;
+  box-shadow: inset 0 4px 8px rgba(255, 255, 255, .8), inset 0 -4px 8px rgba(99, 102, 241, .2);
+}
+
+/* ---------- 皮肤 14 · 极简主义 ---------- */
+.stl--minimalism { background: var(--surface); }
+.stl--minimalism .stl-card { background: transparent; border: none; border-radius: 0; padding: 8px 0; }
+.stl--minimalism .stl-title { color: var(--text); font-weight: 200; font-size: 1.6em; letter-spacing: -.01em; }
+.stl--minimalism .stl-text { color: var(--muted); }
+.stl--minimalism .stl-input {
+  background: transparent; border: none; border-bottom: 1px solid var(--line-strong);
+  border-radius: 0; color: var(--text); padding-left: 0; padding-right: 0;
+}
+.stl--minimalism .stl-btn { border-radius: 999px; font-weight: 500; }
+.stl--minimalism .stl-btn-primary { background: #0071E3; color: #fff; }
+.stl--minimalism .stl-btn-ghost { background: transparent; color: #0071E3; }
+.stl--minimalism .stl-btn-ghost::after { content: ' →'; }
+
+/* ---------- 皮肤 15 · Bento Grid ---------- */
+.stl--bento-grid { background: var(--surface-2); }
+.stl-bento {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  grid-auto-rows: minmax(52px, auto);
+  gap: 10px;
+  width: 100%;
+}
+.stl-bento-cell {
+  background: var(--surface); border: 1px solid var(--line); border-radius: 16px;
+  padding: 12px; display: flex; flex-direction: column; justify-content: center; gap: 6px; min-width: 0;
+}
+.stl-bento-big { grid-row: span 2; }
+.stl-bento-center { align-items: center; }
+.stl--bento-grid .stl-title { color: var(--text); }
+.stl--bento-grid .stl-text { color: var(--muted); }
+.stl--bento-grid .stl-input { background: var(--surface-2); border-radius: 10px; }
+.stl--bento-grid .stl-btn { border-radius: 10px; }
+.stl--bento-grid .stl-btn-primary { background: var(--accent); color: #fff; }
+.stl--bento-grid .stl-btn-ghost { background: transparent; border-color: var(--line-strong); color: var(--text); }
+
+/* ---------- 皮肤 16 · 孟菲斯 ---------- */
+.stl--memphis {
+  background-color: #FFD166;
+  background-image:
+    radial-gradient(#000 1.6px, transparent 1.6px),
+    radial-gradient(#000 1.6px, transparent 1.6px);
+  background-size: 22px 22px;
+  background-position: 0 0, 11px 11px;
+}
+.stl--memphis .stl-card {
+  background: #FFFDF5; border: 3px solid #000; border-radius: 10px;
+  box-shadow: 6px 6px 0 #FF5757; transform: rotate(-.5deg);
+}
+.stl--memphis .stl-title { color: #000; font-weight: 800; text-decoration: underline wavy #00C2FF 2px; text-underline-offset: 5px; }
+.stl--memphis .stl-text { color: #333; font-weight: 600; }
+.stl--memphis .stl-input { background: #fff; border: 3px solid #000; border-radius: 8px; color: #000; font-weight: 600; }
+.stl--memphis .stl-btn { border: 3px solid #000; border-radius: 8px; font-weight: 800; }
+.stl--memphis .stl-btn-primary { background: #FF5757; color: #000; box-shadow: 3px 3px 0 #000; transform: rotate(-1deg); }
+.stl--memphis .stl-btn-ghost { background: #00C2FF; color: #000; box-shadow: 3px 3px 0 #000; transform: rotate(1.5deg); }
+
+/* ---------- 皮肤 17 · Y2K ---------- */
+.stl--y2k { background: linear-gradient(160deg, #E0E7FF 0%, #C7D2FE 45%, #F0ABFC 100%); }
+.stl--y2k .stl-card {
+  background: rgba(255, 255, 255, .55);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  border: 1px solid rgba(255, 255, 255, .9); border-radius: 28px;
+  box-shadow: 0 12px 30px rgba(99, 102, 241, .25), inset 0 1px 0 #fff;
+}
+.stl--y2k .stl-title {
+  background: linear-gradient(180deg, #94A3B8 0%, #F1F5F9 40%, #64748B 55%, #E2E8F0 100%);
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+  font-weight: 800; letter-spacing: .02em;
+}
+.stl--y2k .stl-text { color: #4C1D95; font-weight: 600; }
+.stl--y2k .stl-input { background: rgba(255, 255, 255, .65); border: 1px solid #C7D2FE; border-radius: 999px; color: #4C1D95; }
+.stl--y2k .stl-btn { border-radius: 999px; font-weight: 700; }
+.stl--y2k .stl-btn-primary {
+  background: linear-gradient(180deg, #FBCFE8, #A5B4FC); color: #312E81; border-color: #fff;
+  box-shadow: 0 6px 14px rgba(165, 180, 252, .55), inset 0 1px 0 #fff;
+}
+.stl--y2k .stl-btn-ghost { background: rgba(255, 255, 255, .4); color: #6D28D9; border-color: #fff; }
+
+/* ---------- 皮肤 18 · 酸性设计 ---------- */
+.stl--acid-design { background: #CCFF00; }
+.stl--acid-design .stl-card {
+  background: #0A0A0A; border: 2px solid #000; border-radius: 4px;
+  padding-top: 26px; overflow: hidden;
+}
+.stl--acid-design .stl-card::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; height: 8px;
+  background: repeating-linear-gradient(45deg, #CCFF00 0 10px, #000 10px 20px);
+}
+.stl--acid-design .stl-title { color: #CCFF00; font-weight: 900; font-style: italic; transform: skewX(-6deg); letter-spacing: .03em; }
+.stl--acid-design .stl-text { color: #9BE600; }
+.stl--acid-design .stl-input { background: #111; border: 1px solid #CCFF00; border-radius: 2px; color: #CCFF00; }
+.stl--acid-design .stl-input::placeholder { color: #6B8F00; }
+.stl--acid-design .stl-btn { border-radius: 2px; font-weight: 900; font-style: italic; }
+.stl--acid-design .stl-btn-primary { background: #FF00E5; color: #0A0A0A; transform: skewX(-6deg); }
+.stl--acid-design .stl-btn-ghost { background: transparent; border-color: #CCFF00; color: #CCFF00; transform: skewX(-6deg); }
+
+/* ---------- 减动效偏好 ---------- */
+@media (prefers-reduced-motion: reduce) {
+  .stl--terminal .stl-cursor { animation: none; }
+}

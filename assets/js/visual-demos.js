@@ -573,7 +573,7 @@
   };
 
   D['marquee'] = function () {
-    var text = '公告：可视化图鉴新增 布局 · 视觉技法 · 动效 三个分组 &nbsp;·&nbsp; 术语对齐，沟通不猜谜 &nbsp;·&nbsp; ';
+    var text = '公告：前端元素图鉴新增 布局 · 视觉技法 · 动效 三个分组 &nbsp;·&nbsp; 术语对齐，沟通不猜谜 &nbsp;·&nbsp; ';
     return '<div class="vd-marquee"><div class="vd-marquee-track"><span>' + text + '</span><span>' + text + '</span></div></div>' +
       '<p class="vd-help" style="margin-top:8px">匀速 · 循环 · 不打断 —— 适合公告与行情，不适合需要细读的内容</p>';
   };

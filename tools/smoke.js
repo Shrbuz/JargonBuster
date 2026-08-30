@@ -78,6 +78,7 @@ function load(rel) {
     .filter(f => /^terms\..+\.js$/.test(f)).sort()
     .map(f => 'assets/js/data/' + f))
   .concat(['assets/js/data/visual-elements.js', 'assets/js/visual-demos.js',
+           'assets/js/data/ui-styles.js', 'assets/js/ui-style-demos.js',
            'assets/js/visuals.js', 'assets/js/anims.js', 'assets/js/data.js', 'assets/js/search.js',
            'assets/js/components.js', 'assets/js/views.js', 'assets/js/router.js'])
   .forEach(load);
@@ -124,7 +125,7 @@ if (D) {
 }
 
 /* ---------- 前端可视化标准术语 ---------- */
-console.log('  --- 可视化图鉴 ---');
+console.log('  --- 前端元素图鉴 ---');
 try {
   const VG = W.STD_VISUAL_GROUPS || [];
   const VD = W.STD_VISUAL_DEMOS || {};
@@ -168,6 +169,46 @@ try {
   console.log('  FAIL - 图鉴检查异常: ' + e.message);
 }
 
+/* ---------- UI 风格图鉴 ---------- */
+console.log('  --- UI 风格图鉴 ---');
+try {
+  const ST = W.STD_UI_STYLES || [];
+  const SD = W.STD_STYLE_DEMOS || {};
+  assert(ST.length === 18, '风格条目 = 18（实际 ' + ST.length + '）');
+  assert(new Set(ST.map(s => s.id)).size === 18, '风格 id 全部唯一');
+  const noStl = ST.filter(s => typeof SD[s.demo] !== 'function');
+  assert(noStl.length === 0, '每个风格都有小样' + (noStl.length ? '（缺失: ' + noStl.map(s => s.demo).join(',') + '）' : ''));
+  const badTalk = ST.filter(s => !s.aiTalk || !s.aiTalk.good || s.aiTalk.good.length < 2 || !s.aiTalk.bad || s.aiTalk.bad.length < 1);
+  assert(badTalk.length === 0, '每个风格 aiTalk good>=2 / bad>=1' + (badTalk.length ? '（' + badTalk.map(s => s.id).join(',') + '）' : ''));
+  const badField = ST.find(s => !s.name || !s.en || !s.era || !s.cssHint || !s.summary || !Array.isArray(s.features));
+  assert(!badField, '风格名称/英文/年代/代码要点/简介/特征字段齐全');
+
+  const sIdx = W.STD_VIEWS.styles();
+  assert(sIdx.html.includes('UI 风格图鉴'), '风格列表页可渲染');
+  assert((sIdx.html.match(/class="sty-card"/g) || []).length === 18, '风格列表页渲染 18 张卡片');
+  const glass = W.STD_VIEWS.style('glassmorphism');
+  assert(glass && glass.html.includes('stl-kit') && glass.html.includes('backdrop-filter'), '玻璃拟态详情页含小样与代码要点');
+  assert(glass.html.includes('data-copy'), '风格详情页 AI 句式带复制按钮');
+  assert(glass.html.includes('#/visuals/effects/glassmorphism'), '玻璃拟态详情含元素标本互链');
+  assert(glass.html.includes('#/t/glassmorphism'), '玻璃拟态详情含词条互链');
+  assert(glass.html.includes('#/styles/liquid-glass'), '玻璃拟态详情含相关风格互链');
+  assert(W.STD_VIEWS.style('nope') === null, '未知风格安全返回空');
+
+  const sHit = W.STD_SEARCH.searchStyles('毛玻璃');
+  assert(sHit.length >= 1 && sHit[0].style.id === 'glassmorphism', '风格搜索「毛玻璃」命中玻璃拟态');
+  assert(W.STD_SEARCH.searchStyles('Bento').some(r => r.style.id === 'bento-grid'), '风格搜索英文 Bento 命中 Bento Grid');
+  assert(W.STD_SEARCH.searchStyles('酸性').some(r => r.style.id === 'acid-design'), '风格搜索「酸性」命中酸性设计');
+
+  W.location.hash = '#/styles';
+  assert(W.STD_ROUTER.parseHash().name === 'styleIndex', '风格列表路由解析正确');
+  W.location.hash = '#/styles/glassmorphism';
+  const sr = W.STD_ROUTER.parseHash();
+  assert(sr.name === 'styleDetail' && sr.id === 'glassmorphism', '风格详情路由解析正确');
+} catch (e) {
+  failures++;
+  console.log('  FAIL - 风格图鉴检查异常: ' + e.message);
+}
+
 /* ---------- 应用启动链路（加载 main 并真实执行 boot） ---------- */
 console.log('  --- 启动链路 ---');
 try {
@@ -175,7 +216,9 @@ try {
 
   const sb = els.sidebar ? els.sidebar._html : '';
   assert(sb.includes('我的收藏'), '侧栏含「我的收藏」入口');
-  assert(sb.includes('可视化图鉴'), '侧栏含「可视化图鉴」入口');
+  assert(sb.includes('前端元素图鉴'), '侧栏含「前端元素图鉴」入口');
+  assert(sb.includes('UI 风格图鉴'), '侧栏含「UI 风格图鉴」入口');
+  assert(!sb.includes('可视化图鉴'), '旧名「可视化图鉴」已全部改名');
   assert(sb.includes('分类导航'), '侧栏分类导航正常渲染');
   assert(sb.includes('编程基础'), '侧栏含第一个分类');
 
@@ -190,15 +233,27 @@ try {
   W.STD_ROUTER.refresh();
   assert((els.view._html || '').includes('vs-item'), '图鉴分组页直链渲染+挂载正常');
 
-  // 搜索页图鉴分区（走马灯 → 轮播标本）
+  // 风格图鉴直链（列表 / 详情 mount：复制按钮绑定路径）
+  W.location.hash = '#/styles';
+  W.STD_ROUTER.refresh();
+  assert((els.view._html || '').includes('sty-card'), '风格列表页直链渲染正常');
+  W.location.hash = '#/styles/glassmorphism';
+  W.STD_ROUTER.refresh();
+  assert((els.view._html || '').includes('stl-kit'), '风格详情页直链渲染+挂载正常');
+
+  // 搜索页图鉴与风格分区
   W.location.hash = '#/s/' + encodeURIComponent('走马灯');
   W.STD_ROUTER.refresh();
   assert((els.view._html || '').includes('vs-match'), '搜索页展示图鉴命中分区');
+  W.location.hash = '#/s/' + encodeURIComponent('毛玻璃');
+  W.STD_ROUTER.refresh();
+  assert((els.view._html || '').includes('UI 风格图鉴'), '搜索页展示风格命中分区');
 
   // 首页恢复
   W.location.hash = '';
   W.STD_ROUTER.refresh();
   assert((els.view._html || '').includes('分类浏览'), '首页视图恢复正常');
+  assert((els.view._html || '').includes('图鉴速查'), '首页含图鉴速查入口');
 } catch (e) {
   failures++;
   console.log('  FAIL - 启动链路异常: ' + e.message);
