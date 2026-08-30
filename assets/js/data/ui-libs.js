@@ -2,7 +2,8 @@
    ui-libs.js · UI 库图鉴 · 数据
    每个库：生态 / 场景 / 收费 / 设计语言 / 标签 / 官网 / 「对 AI 该怎么说」句式。
    styleRef 取值必须是 ui-styles.js 中已有的风格 id → 小样即按该风格渲染；
-   cats.eco / cats.scene 是筛选桶（展示用 ecosystems / scenario 的机器可读版）。
+   cats.eco / cats.scene 是筛选桶（展示用 ecosystems / scenario 的机器可读版）；
+   accent / skin / styleRef 微调见文件末尾 LIB_EXTRAS 集中补丁。
    挂载：window.STD_UI_LIBS（数据）· window.STD_UI_LIB_FACETS（筛选维度）
         · window.STD_UI_LIB_FILTER（纯函数筛选，smoke 可直接调用）
    ============================================================ */
@@ -503,4 +504,37 @@
       return true;
     });
   };
+
+  /* ---------------- 品牌色与皮肤微调（集中补丁，diff 友好） ----------------
+     accent：该库品牌代表色，经 STD_LIB_KIT 注入小样 --lib-accent 令牌给主按钮着色；
+     skin：小样皮肤覆盖（无头 / 无样式库用 wireframe 线框，诚实表达「不预设视觉」）；
+     styleRef：个别库按更贴切的设计语言微调风格映射（Chakra→黏土圆角，Arco→极简）。 */
+  var LIB_EXTRAS = {
+    'shadcn-ui':    { accent: '#18181B' },
+    'mui':          { accent: '#007FFF' },
+    'ant-design':   { accent: '#1677FF' },
+    'mantine':      { accent: '#6741D9' },
+    'chakra-ui':    { accent: '#38B2AC', styleRef: 'claymorphism' },
+    'heroui':       { accent: '#006FEE' },
+    'element-plus': { accent: '#409EFF' },
+    'vuetify':      { accent: '#1867C0' },
+    'naive-ui':     { accent: '#18A058' },
+    'prime':        { accent: '#10B981' },
+    'radix-ui':     { accent: '#6E56CF', skin: 'wireframe' },
+    'base-ui':      { accent: '#475569', skin: 'wireframe' },
+    'headless-ui':  { accent: '#111827', skin: 'wireframe' },
+    'react-aria':   { accent: '#EB1000', skin: 'wireframe' },
+    'tailwind-css': { accent: '#06B6D4', skin: 'wireframe' },
+    'bootstrap':    { accent: '#7952B3' },
+    'daisyui':      { accent: '#C026D3' },
+    'tdesign':      { accent: '#0052D9' },
+    'arco-design':  { accent: '#165DFF', styleRef: 'minimalism' }
+  };
+  W.STD_UI_LIBS.forEach(function (l) {
+    var x = LIB_EXTRAS[l.id];
+    if (!x) return;
+    if (x.accent) l.accent = x.accent;
+    if (x.skin) l.skin = x.skin;
+    if (x.styleRef) l.styleRef = x.styleRef;
+  });
 })(window);

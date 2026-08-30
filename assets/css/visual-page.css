@@ -18,7 +18,7 @@
   text-decoration: none;
   transition: transform var(--t-fast), box-shadow var(--t-fast);
 }
-.visual-entry:hover { transform: translateY(-1px); box-shadow: var(--shadow-2); }
+.visual-entry:hover { transform: translateY(-1px); box-shadow: var(--shadow-2); text-decoration: none; }
 .visual-entry-badge {
   flex-shrink: 0;
   padding: 3px 9px;

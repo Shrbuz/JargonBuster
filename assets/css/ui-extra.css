@@ -25,7 +25,7 @@
   text-decoration: none;
   transition: border-color var(--t-fast), box-shadow var(--t-fast), transform var(--t-fast);
 }
-.sty-card:hover { border-color: var(--accent); transform: translateY(-1px); box-shadow: var(--shadow-2); }
+.sty-card:hover { border-color: var(--accent); transform: translateY(-1px); box-shadow: var(--shadow-2); text-decoration: none; }
 .sty-card-head { display: flex; align-items: baseline; gap: 8px; min-width: 0; }
 .sty-card-name { font-size: var(--fs-md); font-weight: 700; color: var(--text); flex-shrink: 0; }
 .sty-card-en {
@@ -600,4 +600,46 @@
   .lib-filter-group { flex-direction: column; align-items: flex-start; gap: var(--s2); }
   .lib-filter-label { width: auto; }
   .lib-filter-foot { flex-direction: column; align-items: flex-start; gap: var(--s2); }
+}
+
+/* ---------- 库图鉴小样：线框皮肤（无样式 / 无头库专用） ---------- */
+/* 这些库不预设视觉，小样以虚线线框示意——行为归库，皮肤归你的设计令牌 */
+
+.stl--wireframe { background: var(--surface-2); }
+.stl--wireframe .stl-card {
+  background: transparent;
+  border: 1.5px dashed var(--line-strong);
+  border-radius: 8px;
+  box-shadow: none;
+}
+.stl--wireframe .stl-title { color: var(--muted); font-weight: 600; letter-spacing: .02em; }
+.stl--wireframe .stl-text { color: var(--muted); }
+.stl--wireframe .stl-input {
+  background: transparent;
+  border: 1.5px dashed var(--line-strong);
+  border-radius: 6px;
+  color: var(--text);
+}
+.stl--wireframe .stl-input::placeholder { color: var(--muted); }
+.stl--wireframe .stl-btn { border-radius: 6px; }
+
+/* ---------- 库图鉴小样：品牌色注入 ---------- */
+/* STD_LIB_KIT 通过内联 --lib-accent 注入各库品牌色，主按钮随之着色；
+   置于文件末尾以覆盖上面各风格皮肤的同类规则。 */
+
+.stl-kit--lib .stl-btn-primary {
+  background: var(--lib-accent, var(--accent));
+  border-color: transparent;
+  box-shadow: none;
+  color: #fff;
+}
+.stl-kit--lib .stl-btn-ghost {
+  color: var(--lib-accent, var(--accent-strong));
+  border-color: var(--lib-accent, var(--line-strong));
+}
+.stl-kit--lib.stl--wireframe .stl-btn-primary { border-style: solid; }
+.stl-kit--lib.stl--wireframe .stl-btn-ghost {
+  color: var(--muted);
+  border-style: dashed;
+  border-color: var(--line-strong);
 }

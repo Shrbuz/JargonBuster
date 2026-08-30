@@ -4,16 +4,18 @@
    只有 stl--<styleId> 皮肤不同 → 跨风格差异一眼可比。
    全部纯静态 HTML，无 JS；样式见 ui-extra.css。
    挂载：window.STD_STYLE_DEMOS（完整小样）· window.STD_STYLE_DEMO_KIT（构建器，列表页缩略复用）
+        · window.STD_LIB_KIT（库图鉴小样：库名标题 + 品牌色令牌 --lib-accent）
    ============================================================ */
 (function (W) {
   'use strict';
 
-  /* 同一组件套件。mini=true 时输出紧凑版（列表页缩略）。extra 允许个别风格补充装饰节点。 */
-  function kit(styleId, mini, extra) {
+  /* 同一组件套件。mini=true 时输出紧凑版（列表页缩略）。extra 允许个别风格补充装饰节点。
+     title / libClass / accentStyle 供库图鉴小样（STD_LIB_KIT）复用，风格图鉴不传。 */
+  function kit(styleId, mini, extra, title, libClass, accentStyle) {
     return '' +
-      '<div class="stl-kit stl--' + styleId + (mini ? ' stl-kit--mini' : '') + '">' +
+      '<div class="stl-kit stl--' + styleId + (libClass ? ' ' + libClass : '') + (mini ? ' stl-kit--mini' : '') + '"' + (accentStyle || '') + '>' +
         '<div class="stl-card">' +
-          '<h4 class="stl-title">风格小样</h4>' +
+          '<h4 class="stl-title">' + (title || '风格小样') + '</h4>' +
           '<p class="stl-text">同一套组件，换一种风格——气质立刻不同。</p>' +
           (extra || '') +
           '<input class="stl-input" type="text" placeholder="输入框 Input" aria-label="风格小样输入框">' +
@@ -67,5 +69,13 @@
     if (styleId === 'bento-grid') return bentoKit(!!mini);
     if (styleId === 'terminal') return kit(styleId, !!mini, terminalExtra());
     return kit(styleId, !!mini);
+  };
+
+  /* 库图鉴小样：标题换成库名、注入品牌色令牌；skin 缺省回退 styleId。
+     无头/无样式库传 skin='wireframe'（线框皮肤，样式见 ui-extra.css）。 */
+  W.STD_LIB_KIT = function (skinId, libName, accent, mini) {
+    var esc = (W.STD_UTIL && W.STD_UTIL.esc) || function (s) { return String(s); };
+    var accentStyle = accent ? ' style="--lib-accent:' + esc(accent) + '"' : '';
+    return kit(skinId, !!mini, '', esc(libName || ''), 'stl-kit--lib', accentStyle);
   };
 })(window);

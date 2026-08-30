@@ -866,7 +866,7 @@
     return _libMap[id] || null;
   }
 
-  function libCard(l, kitFn) {
+  function libCard(l, libKit) {
     var ecoBadges = (l.ecosystems || []).map(function (e) {
       return '<span class="lib-eco">' + esc(e) + '</span>';
     }).join('');
@@ -882,7 +882,7 @@
         '<div class="lib-card-eco">' + ecoBadges +
           '<span class="lib-price">' + (LIB_PRICING_LABEL[l.pricing] || esc(l.pricing)) + '</span>' +
         '</div>' +
-        (kitFn ? '<div class="lib-card-stage">' + kitFn(l.styleRef, true) + '</div>' : '') +
+        (libKit ? '<div class="lib-card-stage">' + libKit(l.skin || l.styleRef, l.name, l.accent, true) + '</div>' : '') +
         '<p class="lib-card-scenario">' + esc(l.scenario) + '</p>' +
         '<div class="lib-card-tags">' + tagChips + '</div>' +
         '<a class="lib-more" href="#/libs/' + encodeURIComponent(l.id) + '">详情与 AI 句式 →</a>' +
@@ -912,7 +912,7 @@
   function renderLibs() {
     var facets = W.STD_UI_LIB_FACETS || { eco: [], scene: [], pricing: [], tags: [] };
     var sel = { eco: [], scene: [], pricing: [], tags: [] };
-    var kitFn = W.STD_STYLE_DEMO_KIT;
+    var libKit = W.STD_LIB_KIT;
 
     var html =
       '<nav class="breadcrumb" aria-label="面包屑">' +
@@ -932,13 +932,13 @@
           '<button type="button" class="lib-clear" data-lib-clear>清空筛选</button>' +
         '</div>' +
       '</div>' +
-      '<div data-lib-grid>' + libGridHtml(W.STD_UI_LIB_FILTER(null), kitFn) + '</div>';
+      '<div data-lib-grid>' + libGridHtml(W.STD_UI_LIB_FILTER(null), libKit) + '</div>';
 
     var mount = function (root) {
       function refresh() {
         var list = W.STD_UI_LIB_FILTER(sel);
         var grid = root.querySelector('[data-lib-grid]');
-        if (grid) grid.innerHTML = libGridHtml(list, kitFn);
+        if (grid) grid.innerHTML = libGridHtml(list, libKit);
         var count = root.querySelector('[data-lib-count]');
         if (count) count.textContent = '筛出 ' + list.length + ' 个库';
       }
@@ -968,8 +968,9 @@
   function renderLibDetail(id) {
     var l = libById(id);
     if (!l) return null;
-    var kitFn = W.STD_STYLE_DEMO_KIT;
+    var libKit = W.STD_LIB_KIT;
     var st = styleById(l.styleRef);
+    var skin = l.skin || l.styleRef;
 
     var html =
       '<nav class="breadcrumb" aria-label="面包屑">' +
@@ -989,10 +990,12 @@
       '</header>' +
 
       '<h2 class="section-label">设计语言小样</h2>' +
-      '<div class="vs-stage">' + (kitFn ? kitFn(l.styleRef, false) : '<span class="vs-missing">小样待补充</span>') + '</div>' +
-      (st
-        ? '<p class="lib-stage-caption">按<a href="#/styles/' + encodeURIComponent(st.id) + '">「' + esc(st.name) + ' ' + esc(st.en) + '」</a>风格渲染——这正是该库的设计语言气质，<a href="#/styles/' + encodeURIComponent(st.id) + '">查看风格详解 →</a></p>'
-        : '') +
+      '<div class="vs-stage">' + (libKit ? libKit(skin, l.name, l.accent, false) : '<span class="vs-missing">小样待补充</span>') + '</div>' +
+      (l.skin === 'wireframe'
+        ? '<p class="lib-stage-caption">该库不预设视觉样式（无样式 / 无头）：交互行为与可访问性由库承担，皮肤由你的设计令牌决定——小样以线框示意。</p>'
+        : (st
+          ? '<p class="lib-stage-caption">按<a href="#/styles/' + encodeURIComponent(st.id) + '">「' + esc(st.name) + ' ' + esc(st.en) + '」</a>风格渲染——这正是该库的设计语言气质，<a href="#/styles/' + encodeURIComponent(st.id) + '">查看风格详解 →</a></p>'
+          : '')) +
 
       '<h2 class="section-label">基本信息</h2>' +
       '<div class="lib-info">' +

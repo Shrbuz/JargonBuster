@@ -252,6 +252,16 @@ try {
   assert(heroui && heroui.html.includes('NextUI'), 'HeroUI 详情注明曾用名 NextUI');
   assert(W.STD_VIEWS.lib('nope') === null, '未知库安全返回空');
 
+  /* 小样差异化：库名标题 + 品牌色 + 线框皮肤 */
+  assert((lIdx.html.match(/stl--wireframe/g) || []).length === 5, '5 个无样式库使用线框皮肤');
+  assert(lIdx.html.includes('--lib-accent') && lIdx.html.includes('stl-kit--lib'), '库小样注入品牌色令牌与库标题');
+  assert(lIdx.html.split('stl--minimalism').length - 1 === 3, '极简皮肤仅 3 库（shadcn/Naive/Arco）');
+  const chakra = W.STD_VIEWS.lib('chakra-ui');
+  assert(chakra && chakra.html.includes('#/styles/claymorphism'), 'Chakra 详情链接黏土拟态风格详解');
+  assert(W.STD_VIEWS.lib('arco-design').html.includes('#/styles/minimalism'), 'Arco 详情链接极简主义风格详解');
+  const radix = W.STD_VIEWS.lib('radix-ui');
+  assert(radix && radix.html.includes('线框示意'), '无头库详情页含线框说明文案');
+
   const lHit = W.STD_SEARCH.searchLibs('腾讯');
   assert(lHit.length >= 1 && lHit[0].lib.id === 'tdesign', '库搜索「腾讯」命中 TDesign');
   assert(W.STD_SEARCH.searchLibs('无头').some(r => r.lib.id === 'radix-ui'), '库搜索「无头」命中 Radix UI');
