@@ -49,7 +49,7 @@
     var html =
       '<section class="hero">' +
         '<span class="hero-kicker">OPEN KNOWLEDGE · 开放知识库</span>' +
-        '<h1 class="hero-title">把<em>技术规范用语</em>说成人话</h1>' +
+        '<h1 class="hero-title">AI学习第一步，掌握<em>技术规范用语</em></h1>' +
         '<p class="hero-desc">' +
           esc('和 AI 结对编程、读文档、开会评审时，总有些词“眼熟但说不清”？' +
               '这里把常用技术术语按场景分好类：一句话定义 + 通俗讲解 + 生活类比 + ' +
@@ -112,7 +112,7 @@
       html += '</div>';
     }
 
-    return { title: '标准术语 StandardTerm · 技术规范用语学习手册', html: html, mount: null };
+    return { title: '浆果 · 标准术语网 · JargonBuster Standard Term', html: html, mount: null };
   }
 
   /* ================= 分类页 ================= */

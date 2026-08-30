@@ -1,9 +1,12 @@
 /* ============================================================
    feedback.js · 全站反馈表单（零依赖）
    - 右下角悬浮按钮 → 弹窗
-   - 自动带当前页面 ID（location.hash / pathname）+ 页面标题
-   - 打开弹窗即自动截图并显示预览（可重新截图，点击预览图可放大）
-   - 截图用 html2canvas（直接 DOM→canvas，不走 SVG foreignObject）
+   - 自动带当前页面 ID（打开表单时实时取 location.hash / pathname）+ 页面标题
+   - 点悬浮按钮：先弹共享确认截取当前画面（此时表单未打开，画面天然无弹窗），
+     截完再打开表单显示预览（可重新截图，点击预览图可放大）
+   - 截图优先走 getDisplayMedia 像素级截取本标签页：所见即所得，fixed 顶栏/侧栏、
+     毛玻璃等与屏幕一致；每次抓帧前浏览器弹一次共享确认。
+     不支持时回退 modern-screenshot DOM 重绘（截全页后裁视口，fixed 元素会缺失）
    - POST 到反馈收信服务；本地(localhost)自动指向 127.0.0.1:8899
    挂载：无（自执行注入 DOM）
    ============================================================ */
@@ -14,11 +17,15 @@
   var isLocal = /^(localhost|127\.0\.0\.1)$/.test(W.location.hostname);
   var isFile = W.location.protocol === 'file:';
   var ENDPOINT = isLocal ? 'http://127.0.0.1:8899/feedback/' : '/feedback/';
-  var PAGE_ID = (W.location.hash || W.location.pathname || '/') || 'home';
-  var PAGE_TITLE = doc.title || '';
+
+  /* 页面 ID/标题动态取：SPA 靠 hash 路由切换页面，
+     脚本加载时的 hash 早就不是用户当前所在页了 */
+  function pageId() { return (W.location.hash || W.location.pathname || '/') || 'home'; }
+  function pageTitle() { return doc.title || ''; }
   var CAPTURE_TIMEOUT = 15000; // html2canvas 整页截图可能较慢，给 15 秒
 
   var fab, modal, pageInput, descInput, contactInput, shotCheck, previewImg, submitBtn, recaptureBtn, shotStatus;
+  var shotArea, shotThumb;
   var lightbox, lightboxImg;
   var currentShot = null;
 
@@ -48,7 +55,7 @@
 
     var fieldPage = h('label', 'feedback-field');
     fieldPage.appendChild(h('span', 'feedback-label', null, '页面'));
-    pageInput = h('input', 'feedback-input', { type: 'text', readonly: '', value: PAGE_ID });
+    pageInput = h('input', 'feedback-input', { type: 'text', readonly: '', value: pageId() });
     fieldPage.appendChild(pageInput);
 
     var fieldDesc = h('label', 'feedback-field');
@@ -69,20 +76,25 @@
     shotRow.appendChild(shotCheck);
     shotRow.appendChild(h('span', null, null, '附带当前页面截图（推荐，便于定位）'));
 
-    var shotBar = h('div', 'feedback-shot-bar');
-    shotStatus = h('div', 'feedback-shot-status', null, '');
-    recaptureBtn = h('button', 'feedback-recap btn', { type: 'button' }, '重新截图');
-    shotBar.appendChild(shotStatus);
-    shotBar.appendChild(recaptureBtn);
-
+    /* 截图操作区：缩略图与「重新截图」横排，状态文案在按钮下方；
+       未勾选「附带截图」时整块隐藏（syncShotArea 控制） */
+    shotArea = h('div', 'feedback-shot-area');
+    shotThumb = h('div', 'feedback-shot-thumb', { hidden: '' });
     previewImg = h('img', 'feedback-preview', { alt: '截图预览，点击放大', hidden: '' });
+    shotThumb.appendChild(previewImg);
+    var shotSide = h('div', 'feedback-shot-side');
+    recaptureBtn = h('button', 'feedback-recap btn', { type: 'button' }, '重新截图');
+    shotStatus = h('div', 'feedback-shot-status', null, '');
+    shotSide.appendChild(recaptureBtn);
+    shotSide.appendChild(shotStatus);
+    shotArea.appendChild(shotThumb);
+    shotArea.appendChild(shotSide);
 
     body.appendChild(fieldPage);
     body.appendChild(fieldDesc);
     body.appendChild(fieldContact);
     body.appendChild(shotRow);
-    body.appendChild(shotBar);
-    body.appendChild(previewImg);
+    body.appendChild(shotArea);
 
     if (isFile) {
       body.appendChild(h('div', 'feedback-warn', null,
@@ -109,27 +121,46 @@
     doc.body.appendChild(modal);
     doc.body.appendChild(lightbox);
 
-    fab.addEventListener('click', open);
+    fab.addEventListener('click', openFromFab);
     modal.addEventListener('click', function (e) { if (e.target === modal) close(); });
     modal.querySelector('.feedback-close').addEventListener('click', close);
     cancelBtn.addEventListener('click', close);
     submitBtn.addEventListener('click', submit);
     recaptureBtn.addEventListener('click', doCapture);
-    previewImg.addEventListener('click', openLightbox);
+    shotThumb.addEventListener('click', openLightbox); // 缩略图整块可点，放大看细节
     lightbox.addEventListener('click', closeLightbox);
     shotCheck.addEventListener('change', function () {
-      if (shotCheck.checked) doCapture();
-      else { currentShot = null; shotStatus.textContent = ''; previewImg.setAttribute('hidden', ''); previewImg.removeAttribute('src'); }
+      if (shotCheck.checked) {
+        doCapture();
+      } else {
+        currentShot = null;
+        shotStatus.textContent = '';
+        previewImg.removeAttribute('src');
+        previewImg.setAttribute('hidden', '');
+      }
+      syncShotArea();
     });
     descInput.addEventListener('keydown', function (e) {
       if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') submit();
     });
+
+    syncShotArea(); // 初始显隐归一：默认勾选 → 显示按钮区，无图 → 缩略图隐藏
+  }
+
+  /* 点悬浮按钮：先截图、后弹窗。表单还没打开，画面里天然没有弹窗，
+     从根上避免「反馈弹窗入镜」；用户取消共享则照常打开表单（不带截图） */
+  function openFromFab() {
+    if (!shotCheck.checked || currentShot) { open(); return; }
+    captureShot().then(function (shot) {
+      open();
+      applyShot(shot);
+    });
   }
 
   function open() {
+    pageInput.value = pageId(); // 打开时实时刷新，反映用户当前所在页
     modal.removeAttribute('hidden');
     descInput.focus();
-    if (shotCheck.checked && !currentShot) doCapture();
   }
 
   function close() {
@@ -151,8 +182,80 @@
     lightboxImg.removeAttribute('src');
   }
 
-  /* 只截当前可视区域（viewport），不全页；modern-screenshot 截全页 canvas 后裁剪到可视窗口 */
+  /* ---------- 像素级截取（首选） ----------
+     getDisplayMedia 采集本标签页的合成画面：拿到的是真实渲染像素，fixed 顶栏/侧栏、
+     毛玻璃、混合模式与屏幕完全一致（扩展 captureVisibleTab 的网页侧合法等价物）。
+     代价：每次抓帧前浏览器弹一次共享确认（安全边界，网页绕不开）。
+     抓帧瞬间以 is-capturing 隐藏反馈弹窗/悬浮按钮，别把表单自己拍进去。
+     返回 dataURL；用户取消授权返回 'cancelled'（不降级偷拍）；
+     浏览器不支持返回 null（由调用方回退 DOM 重绘路线）。 */
+  function captureShotPixel() {
+    if (!W.navigator.mediaDevices || !W.navigator.mediaDevices.getDisplayMedia) return Promise.resolve(null);
+    return new Promise(function (resolve) {
+      var stream;
+      function stop() { if (stream) stream.getTracks().forEach(function (t) { t.stop(); }); }
+      function ok(dataUrl) { stop(); resolve(dataUrl); }
+      function fail(e) { console.error('[反馈截图] 像素截取失败:', (e && e.name) || e); stop(); resolve(null); }
+      W.navigator.mediaDevices.getDisplayMedia({
+        video: true,
+        audio: false,
+        preferCurrentTab: true,        // Chrome：预选当前标签页
+        selfBrowserSurface: 'include'  // 允许共享自己
+      }).then(function (s) {
+        stream = s;
+        var video = doc.createElement('video');
+        video.muted = true;
+        video.playsInline = true;
+        video.srcObject = s;
+        // 弹窗已开着（重新截图场景）：抓帧瞬间隐藏弹窗与悬浮按钮
+        // （复用 legacy 路线的 is-capturing 约定）。关键：视频帧有延迟，
+        // 必须等「隐藏之后合成的新帧」，否则抓到的还是含弹窗的旧帧。
+        // 点悬浮按钮的首截场景弹窗还没打开，无需遮罩，抓到的就是干净画面。
+        var masked = false;
+        if (modal && !modal.hasAttribute('hidden')) {
+          masked = true;
+          doc.body.classList.add('is-capturing');
+        }
+        function unmask() { if (masked) doc.body.classList.remove('is-capturing'); }
+        var tries = 0;
+        function grab() {
+          if (!video.videoWidth || !video.videoHeight) {
+            if (++tries > 25) { unmask(); fail(new Error('首帧超时')); return; } // ≈5 秒仍无画面则放弃
+            setTimeout(grab, 200); // 首帧未就绪，稍候重试
+            return;
+          }
+          try {
+            var c = doc.createElement('canvas');
+            c.width = video.videoWidth;
+            c.height = video.videoHeight;
+            c.getContext('2d').drawImage(video, 0, 0);
+            unmask();
+            ok(c.toDataURL('image/jpeg', 0.8));
+          } catch (e) { unmask(); fail(e); }
+        }
+        video.play().then(function () {
+          // 有遮罩 → 等 500ms 让含弹窗的旧帧全部流过；无遮罩（首截）→ 首帧可用即抓
+          setTimeout(grab, masked ? 500 : 0);
+        }).catch(function (e) { unmask(); fail(e); });
+      }).catch(function (e) {
+        if (e && (e.name === 'NotAllowedError' || e.name === 'AbortError')) resolve('cancelled'); // 用户拒绝/关闭弹窗
+        else fail(e);
+      });
+    });
+  }
+
+  /* 路由：像素截取优先，不支持时回退 modern-screenshot DOM 重绘 */
   function captureShot() {
+    return captureShotPixel().then(function (shot) {
+      if (shot === 'cancelled') return shot;
+      if (shot) return shot;
+      return captureShotLegacy();
+    });
+  }
+
+  /* 只截当前可视区域（viewport），不全页；modern-screenshot 截全页 canvas 后裁剪到可视窗口。
+     DOM 重绘的天然短板：fixed/sticky 元素钉在整页图原点附近，滚动后裁不到——所以只作回退 */
+  function captureShotLegacy() {
     if (!W.modernScreenshot) {
       console.error('[反馈截图] modern-screenshot 未加载（检查 assets/js/vendor/modern-screenshot.min.js）');
       return Promise.resolve(null);
@@ -200,23 +303,39 @@
     });
   }
 
-  /* 打开弹窗时触发：截图并显示预览 */
+  /* 按勾选状态与截图结果同步操作区显隐：
+     未勾选 → 整块隐藏；已勾选 → 按钮与状态常显，缩略图仅有图时出现 */
+  function syncShotArea() {
+    if (!shotCheck.checked) { shotArea.setAttribute('hidden', ''); return; }
+    shotArea.removeAttribute('hidden');
+    if (currentShot && previewImg.getAttribute('src')) shotThumb.removeAttribute('hidden');
+    else shotThumb.setAttribute('hidden', '');
+  }
+
+  /* 把截图结果落到表单：成功→预览；取消/失败→状态文案 */
+  function applyShot(shot) {
+    if (shot === 'cancelled') {
+      shotStatus.textContent = '已取消截图（可点重新截图）';
+    } else if (shot) {
+      currentShot = shot;
+      previewImg.src = shot;
+      previewImg.removeAttribute('hidden');
+      shotStatus.textContent = '';
+    } else {
+      shotStatus.textContent = '截图失败，将不带截图提交（可点重新截图）';
+    }
+    syncShotArea();
+  }
+
+  /* 表单内手动（重新）截图：弹窗已在屏上，走「遮罩 + 等帧」路径 */
   function doCapture() {
     if (!shotCheck.checked) return;
     currentShot = null;
     shotStatus.textContent = '截图中…';
     previewImg.setAttribute('hidden', '');
     previewImg.removeAttribute('src');
-    captureShot().then(function (shot) {
-      if (shot) {
-        currentShot = shot;
-        previewImg.src = shot;
-        previewImg.removeAttribute('hidden');
-        shotStatus.textContent = '';
-      } else {
-        shotStatus.textContent = '截图失败，将不带截图提交（可点重新截图）';
-      }
-    });
+    syncShotArea();
+    captureShot().then(applyShot);
   }
 
   function post(payload) {
@@ -237,8 +356,8 @@
       return;
     }
     var payload = {
-      page: PAGE_ID,
-      title: PAGE_TITLE,
+      page: pageInput.value || pageId(),
+      title: pageTitle(),
       desc: desc,
       contact: contactInput.value.trim(),
       shot: ''
