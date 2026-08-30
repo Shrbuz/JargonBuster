@@ -98,6 +98,14 @@
         '</span>' +
         '<span class="visual-entry-arrow">→</span>' +
       '</a>' +
+      '<a class="visual-entry" href="#/libs">' +
+        '<span class="visual-entry-badge">组件库</span>' +
+        '<span class="visual-entry-body">' +
+          '<strong>UI 库图鉴</strong>' +
+          '<span>按生态与场景选对现成的组件体系，学会用一句准确的话向 AI 声明技术栈</span>' +
+        '</span>' +
+        '<span class="visual-entry-arrow">→</span>' +
+      '</a>' +
     '</div>';
 
     /* 学习路线 */
@@ -377,6 +385,7 @@
     var results = W.STD_SEARCH.search(query);
     var vres = W.STD_SEARCH.searchVisuals ? W.STD_SEARCH.searchVisuals(query) : [];
     var sres = W.STD_SEARCH.searchStyles ? W.STD_SEARCH.searchStyles(query) : [];
+    var lres = W.STD_SEARCH.searchLibs ? W.STD_SEARCH.searchLibs(query) : [];
 
     function visualSection(list) {
       return '<h2 class="group-title">前端元素图鉴<span class="n">' + list.length + '</span></h2>' +
@@ -396,12 +405,22 @@
         }).join('') + '</div>';
     }
 
+    function libSection(list) {
+      return '<h2 class="group-title">UI 库图鉴<span class="n">' + list.length + '</span></h2>' +
+        '<div class="vs-match-list">' + list.map(function (r) {
+          return '<a class="vs-match" href="#/libs/' + encodeURIComponent(r.lib.id) + '">' +
+            W.STD_SEARCH.highlight(r.lib.name, query) +
+            '<span class="g">' + esc(r.lib.scenario) + '</span></a>';
+        }).join('') + '</div>';
+    }
+
     var html =
       '<header class="page-head">' +
         '<h1 class="page-title">搜索：“' + esc(query) + '”</h1>' +
         '<p class="page-sub">共找到 ' + results.length + ' 个相关词条' +
           (vres.length ? '、' + vres.length + ' 个图鉴元素' : '') +
-          (sres.length ? '、' + sres.length + ' 个 UI 风格' : '') + '</p>' +
+          (sres.length ? '、' + sres.length + ' 个 UI 风格' : '') +
+          (lres.length ? '、' + lres.length + ' 个 UI 库' : '') + '</p>' +
       '</header>';
 
     if (!results.length) {
@@ -414,6 +433,7 @@
         '</div>';
       if (vres.length) html += visualSection(vres);
       if (sres.length) html += styleSection(sres);
+      if (lres.length) html += libSection(lres);
       html +=
         '<h2 class="section-label">不如先看看这些</h2>' +
         '<div class="term-grid">' + sugg.map(function (t) { return C.termCard(t); }).join('') + '</div>';
@@ -433,6 +453,7 @@
 
     if (vres.length) html += visualSection(vres);
     if (sres.length) html += styleSection(sres);
+    if (lres.length) html += libSection(lres);
 
     return { title: '搜索 ' + query + ' · 标准术语', html: html, mount: null };
   }
@@ -811,8 +832,18 @@
       html += '</div>';
     }
 
-    var mount = function (root) {
-      /* 复制按钮：容器持久存在，只绑定一次，避免监听器叠加 */
+    var mount = makeCopyMount();
+
+    return { title: s.name + ' · UI 风格图鉴 · 标准术语', html: html, mount: mount };
+  }
+
+  /* ================= UI 库图鉴 ================= */
+
+  var LIB_PRICING_LABEL = { free: '免费', freemium: '免费 + 付费' };
+
+  /* 复制按钮统一挂载：容器持久存在，只绑定一次，避免监听器叠加 */
+  function makeCopyMount() {
+    return function (root) {
       if (!root.dataset.copyBound) {
         root.dataset.copyBound = '1';
         root.addEventListener('click', function (e) {
@@ -824,8 +855,173 @@
         });
       }
     };
+  }
 
-    return { title: s.name + ' · UI 风格图鉴 · 标准术语', html: html, mount: mount };
+  var _libMap = null;
+  function libById(id) {
+    if (!_libMap) {
+      _libMap = {};
+      (W.STD_UI_LIBS || []).forEach(function (l) { _libMap[l.id] = l; });
+    }
+    return _libMap[id] || null;
+  }
+
+  function libCard(l, kitFn) {
+    var ecoBadges = (l.ecosystems || []).map(function (e) {
+      return '<span class="lib-eco">' + esc(e) + '</span>';
+    }).join('');
+    var tagChips = (l.tags || []).map(function (t) {
+      return '<span class="lib-tag">' + esc(t) + '</span>';
+    }).join('');
+    return '' +
+      '<div class="lib-card">' +
+        '<div class="lib-card-head">' +
+          '<a class="lib-card-name" href="#/libs/' + encodeURIComponent(l.id) + '">' + esc(l.name) + '</a>' +
+          '<a class="lib-site" href="' + esc(l.site) + '" target="_blank" rel="noopener" title="访问官网（新窗口）">官网 ↗</a>' +
+        '</div>' +
+        '<div class="lib-card-eco">' + ecoBadges +
+          '<span class="lib-price">' + (LIB_PRICING_LABEL[l.pricing] || esc(l.pricing)) + '</span>' +
+        '</div>' +
+        (kitFn ? '<div class="lib-card-stage">' + kitFn(l.styleRef, true) + '</div>' : '') +
+        '<p class="lib-card-scenario">' + esc(l.scenario) + '</p>' +
+        '<div class="lib-card-tags">' + tagChips + '</div>' +
+        '<a class="lib-more" href="#/libs/' + encodeURIComponent(l.id) + '">详情与 AI 句式 →</a>' +
+      '</div>';
+  }
+
+  function libGridHtml(list, kitFn) {
+    if (!list.length) {
+      return '<div class="lib-empty"><p>没有符合筛选条件的库。</p>' +
+        '<button type="button" class="lib-clear" data-lib-clear>清空筛选</button></div>';
+    }
+    return '<div class="lib-grid">' + list.map(function (l) { return libCard(l, kitFn); }).join('') + '</div>';
+  }
+
+  function libFilterGroup(label, dim, facets) {
+    return '' +
+      '<div class="lib-filter-group">' +
+        '<span class="lib-filter-label">' + esc(label) + '</span>' +
+        '<div class="lib-filter-chips">' +
+          facets.map(function (f) {
+            return '<button type="button" class="lib-filter" data-dim="' + esc(dim) + '" data-val="' + esc(f.id) + '">' + esc(f.label) + '</button>';
+          }).join('') +
+        '</div>' +
+      '</div>';
+  }
+
+  function renderLibs() {
+    var facets = W.STD_UI_LIB_FACETS || { eco: [], scene: [], pricing: [], tags: [] };
+    var sel = { eco: [], scene: [], pricing: [], tags: [] };
+    var kitFn = W.STD_STYLE_DEMO_KIT;
+
+    var html =
+      '<nav class="breadcrumb" aria-label="面包屑">' +
+        '<a href="#/">首页</a><span class="sep">/</span><span class="here">UI 库图鉴</span>' +
+      '</nav>' +
+      '<header class="page-head">' +
+        '<h1 class="page-title">UI 库图鉴</h1>' +
+        '<p class="page-sub">「用什么现成体系搭」也是一句要说给 AI 听的话：按生态、场景、收费、风格筛出候选库，看懂每个库的设计语言，再拿着「对 AI 说」的原话开工——选对库、说对话，不返工。</p>' +
+      '</header>' +
+      '<div class="lib-filters">' +
+        libFilterGroup('生态', 'eco', facets.eco) +
+        libFilterGroup('场景', 'scene', facets.scene) +
+        libFilterGroup('收费', 'pricing', facets.pricing) +
+        libFilterGroup('标签', 'tags', facets.tags) +
+        '<div class="lib-filter-foot">' +
+          '<span class="lib-count" data-lib-count></span>' +
+          '<button type="button" class="lib-clear" data-lib-clear>清空筛选</button>' +
+        '</div>' +
+      '</div>' +
+      '<div data-lib-grid>' + libGridHtml(W.STD_UI_LIB_FILTER(null), kitFn) + '</div>';
+
+    var mount = function (root) {
+      function refresh() {
+        var list = W.STD_UI_LIB_FILTER(sel);
+        var grid = root.querySelector('[data-lib-grid]');
+        if (grid) grid.innerHTML = libGridHtml(list, kitFn);
+        var count = root.querySelector('[data-lib-count]');
+        if (count) count.textContent = '筛出 ' + list.length + ' 个库';
+      }
+      root.addEventListener('click', function (e) {
+        var chip = e.target.closest('.lib-filter');
+        if (chip) {
+          var dim = chip.getAttribute('data-dim');
+          var val = chip.getAttribute('data-val');
+          var arr = sel[dim] || (sel[dim] = []);
+          var i = arr.indexOf(val);
+          if (i === -1) arr.push(val); else arr.splice(i, 1);
+          chip.classList.toggle('is-active', i === -1);
+          refresh();
+          return;
+        }
+        if (e.target.closest('[data-lib-clear]')) {
+          sel.eco.length = 0; sel.scene.length = 0; sel.pricing.length = 0; sel.tags.length = 0;
+          root.querySelectorAll('.lib-filter.is-active').forEach(function (b) { b.classList.remove('is-active'); });
+          refresh();
+        }
+      });
+    };
+
+    return { title: 'UI 库图鉴 · 标准术语', html: html, mount: mount };
+  }
+
+  function renderLibDetail(id) {
+    var l = libById(id);
+    if (!l) return null;
+    var kitFn = W.STD_STYLE_DEMO_KIT;
+    var st = styleById(l.styleRef);
+
+    var html =
+      '<nav class="breadcrumb" aria-label="面包屑">' +
+        '<a href="#/">首页</a><span class="sep">/</span>' +
+        '<a href="#/libs">UI 库图鉴</a><span class="sep">/</span>' +
+        '<span class="here">' + esc(l.name) + '</span>' +
+      '</nav>' +
+      '<header class="page-head">' +
+        '<h1 class="page-title">' + esc(l.name) + '</h1>' +
+        '<p class="page-sub">' + esc(l.summary) + '</p>' +
+        '<div class="sty-meta">' +
+          (l.ecosystems || []).map(function (e) { return '<span class="lib-eco">' + esc(e) + '</span>'; }).join('') +
+          '<span class="lib-price">' + (LIB_PRICING_LABEL[l.pricing] || esc(l.pricing)) + '</span>' +
+          (l.tags || []).map(function (t) { return '<span class="sty-rep">' + esc(t) + '</span>'; }).join('') +
+        '</div>' +
+        (l.note ? '<p class="lib-note">※ ' + esc(l.note) + '</p>' : '') +
+      '</header>' +
+
+      '<h2 class="section-label">设计语言小样</h2>' +
+      '<div class="vs-stage">' + (kitFn ? kitFn(l.styleRef, false) : '<span class="vs-missing">小样待补充</span>') + '</div>' +
+      (st
+        ? '<p class="lib-stage-caption">按<a href="#/styles/' + encodeURIComponent(st.id) + '">「' + esc(st.name) + ' ' + esc(st.en) + '」</a>风格渲染——这正是该库的设计语言气质，<a href="#/styles/' + encodeURIComponent(st.id) + '">查看风格详解 →</a></p>'
+        : '') +
+
+      '<h2 class="section-label">基本信息</h2>' +
+      '<div class="lib-info">' +
+        '<div class="lib-info-row"><span class="lib-info-key">设计语言</span><span>' + esc(l.designLanguage) + '</span></div>' +
+        '<div class="lib-info-row"><span class="lib-info-key">适用场景</span><span>' + esc(l.scenario) + '</span></div>' +
+        '<div class="lib-info-row"><span class="lib-info-key">生态</span><span>' + esc((l.ecosystems || []).join('、')) + '</span></div>' +
+        '<div class="lib-info-row"><span class="lib-info-key">收费</span><span>' + (LIB_PRICING_LABEL[l.pricing] || esc(l.pricing)) + '</span></div>' +
+        '<div class="lib-info-row"><span class="lib-info-key">官网</span><span><a class="lib-site-link" href="' + esc(l.site) + '" target="_blank" rel="noopener">' + esc(l.site.replace(/^https?:\/\//, '')) + ' ↗</a></span></div>' +
+      '</div>' +
+
+      '<h2 class="section-label">怎么对 AI 说</h2>' +
+      '<div class="talk-wrap">' +
+        ((l.aiTalk && l.aiTalk.good && l.aiTalk.good.length)
+          ? '<div class="talk-col talk-good"><h4>' + ICONS.check + '这样说，AI 秒懂</h4><ul class="talk-list">' +
+            l.aiTalk.good.map(talkItemGood).join('') + '</ul></div>'
+          : '') +
+        ((l.aiTalk && l.aiTalk.bad && l.aiTalk.bad.length)
+          ? '<div class="talk-col talk-bad"><h4>' + ICONS.cross + '别说成这样</h4><ul class="talk-list">' +
+            l.aiTalk.bad.map(talkItemBad).join('') + '</ul></div>'
+          : '') +
+      '</div>' +
+
+      (st
+        ? '<h2 class="section-label">相关内容</h2><div class="sty-related">' +
+          '<a class="vs-match" href="#/styles/' + encodeURIComponent(st.id) + '">风格详解：' + esc(st.name) + '<span class="g">' + esc(st.en) + '</span></a>' +
+          '</div>'
+        : '');
+
+    return { title: l.name + ' · UI 库图鉴 · 标准术语', html: html, mount: makeCopyMount() };
   }
 
   /* ================= 关于页 ================= */
@@ -929,6 +1125,8 @@
     visualGroup: renderVisualGroup,
     styles: renderStyleIndex,
     style: renderStyleDetail,
+    libs: renderLibs,
+    lib: renderLibDetail,
     about: renderAbout,
     notFound: renderNotFound
   };

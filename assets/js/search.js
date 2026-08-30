@@ -117,6 +117,34 @@
     return out;
   }
 
+  /** UI 库图鉴检索：库名 / 别名 / 标签 / 生态 / 场景 / 设计语言，与风格检索同样 AND 语义、累计分排序 */
+  function searchLibs(query) {
+    var tokens = tokenize(query);
+    if (!tokens.length || !W.STD_UI_LIBS) return [];
+    var out = [];
+    W.STD_UI_LIBS.forEach(function (l) {
+      var aliases = (l.aliases || []).join('\n');
+      var tags = (l.tags || []).join('\n');
+      var ecosystems = (l.ecosystems || []).join('\n');
+      var total = 0;
+      for (var i = 0; i < tokens.length; i++) {
+        var tok = tokens[i];
+        var best = fieldScore(l.name, tok, 100);
+        best = Math.max(best, fieldScore(aliases, tok, 85));
+        best = Math.max(best, fieldScore(tags, tok, 70));
+        best = Math.max(best, fieldScore(ecosystems, tok, 55));
+        best = Math.max(best, fieldScore(l.scenario, tok, 45));
+        best = Math.max(best, fieldScore(l.designLanguage, tok, 40));
+        best = Math.max(best, fieldScore(l.summary, tok, 40));
+        if (best === 0) { total = 0; break; } // AND 语义
+        total += best;
+      }
+      if (total > 0) out.push({ lib: l, score: total });
+    });
+    out.sort(function (a, b) { return b.score - a.score; });
+    return out;
+  }
+
   /** 将 text 中命中的片段包上 <mark>（安全转义后输出） */
   function highlight(text, query) {
     var raw = String(text == null ? '' : text);
@@ -167,5 +195,5 @@
     return out;
   }
 
-  W.STD_SEARCH = { search: search, searchVisuals: searchVisuals, searchStyles: searchStyles, highlight: highlight, suggestions: suggestions, tokenize: tokenize };
+  W.STD_SEARCH = { search: search, searchVisuals: searchVisuals, searchStyles: searchStyles, searchLibs: searchLibs, highlight: highlight, suggestions: suggestions, tokenize: tokenize };
 })(window);

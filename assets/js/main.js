@@ -57,6 +57,9 @@
         '<a class="side-link' + (activeKey === 'styles' ? ' active' : '') + '" href="#/styles" title="主流 UI 视觉风格与 AI 沟通句式">' +
           W.STD_UTIL.ICONS.palette + '<span>UI 风格图鉴</span>' +
         '</a>' +
+        '<a class="side-link' + (activeKey === 'libs' ? ' active' : '') + '" href="#/libs" title="主流 UI 组件库选型与 AI 技术栈声明">' +
+          W.STD_UTIL.ICONS.package + '<span>UI 库图鉴</span>' +
+        '</a>' +
       '</nav>' +
       '<p class="side-label" style="margin-top:var(--s5)">分类导航</p><nav class="side-list">';
 
@@ -249,6 +252,8 @@
         activeKey = 'visuals';
       } else if (route.name === 'styleIndex' || route.name === 'styleDetail') {
         activeKey = 'styles';
+      } else if (route.name === 'libIndex' || route.name === 'libDetail') {
+        activeKey = 'libs';
       }
       renderSidebar(activeKey);
     });

@@ -1,6 +1,6 @@
 /* ============================================================
    router.js · hash 路由
-   路由表：#/ 首页 · #/c/:cat 分类 · #/t/:id 词条 · #/s/:q 搜索 · #/favs 收藏 · #/visuals 图鉴 · #/styles/:id 风格图鉴 · #/about 关于
+   路由表：#/ 首页 · #/c/:cat 分类 · #/t/:id 词条 · #/s/:q 搜索 · #/favs 收藏 · #/visuals 图鉴 · #/styles/:id 风格图鉴 · #/libs/:id 库图鉴 · #/about 关于
    挂载：window.STD_ROUTER
    ============================================================ */
 (function (W) {
@@ -43,6 +43,10 @@
         return parts[1]
           ? { name: 'styleDetail', id: decodeURIComponent(parts[1]) }
           : { name: 'styleIndex' };
+      case 'libs':
+        return parts[1]
+          ? { name: 'libDetail', id: decodeURIComponent(parts[1]) }
+          : { name: 'libIndex' };
       default:
         return { name: 'notfound' };
     }
@@ -61,6 +65,8 @@
       case 'visualGroup': return VIEWS.visualGroup(route.group, route.item) || VIEWS.notFound();
       case 'styleIndex': return VIEWS.styles();
       case 'styleDetail': return VIEWS.style(route.id) || VIEWS.notFound();
+      case 'libIndex': return VIEWS.libs();
+      case 'libDetail': return VIEWS.lib(route.id) || VIEWS.notFound();
       default: return VIEWS.notFound();
     }
   }

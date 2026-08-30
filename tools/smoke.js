@@ -78,7 +78,7 @@ function load(rel) {
     .filter(f => /^terms\..+\.js$/.test(f)).sort()
     .map(f => 'assets/js/data/' + f))
   .concat(['assets/js/data/visual-elements.js', 'assets/js/visual-demos.js',
-           'assets/js/data/ui-styles.js', 'assets/js/ui-style-demos.js',
+           'assets/js/data/ui-styles.js', 'assets/js/ui-style-demos.js', 'assets/js/data/ui-libs.js',
            'assets/js/visuals.js', 'assets/js/anims.js', 'assets/js/data.js', 'assets/js/search.js',
            'assets/js/components.js', 'assets/js/views.js', 'assets/js/router.js'])
   .forEach(load);
@@ -209,6 +209,64 @@ try {
   console.log('  FAIL - 风格图鉴检查异常: ' + e.message);
 }
 
+/* ---------- UI 库图鉴 ---------- */
+console.log('  --- UI 库图鉴 ---');
+try {
+  const LB = W.STD_UI_LIBS || [];
+  const FACETS = W.STD_UI_LIB_FACETS || {};
+  const FILTER = W.STD_UI_LIB_FILTER;
+  assert(LB.length === 19, '库条目 = 19（实际 ' + LB.length + '）');
+  assert(new Set(LB.map(l => l.id)).size === 19, '库 id 全部唯一');
+  const styleIds = new Set((W.STD_UI_STYLES || []).map(s => s.id));
+  const badRef = LB.filter(l => !styleIds.has(l.styleRef));
+  assert(badRef.length === 0, '每个库 styleRef 都指向已有风格' + (badRef.length ? '（缺失: ' + badRef.map(l => l.id).join(',') + '）' : ''));
+  const badTalk = LB.filter(l => !l.aiTalk || !l.aiTalk.good || l.aiTalk.good.length < 2 || !l.aiTalk.bad || l.aiTalk.bad.length < 1);
+  assert(badTalk.length === 0, '每个库 aiTalk good>=2 / bad>=1' + (badTalk.length ? '（' + badTalk.map(l => l.id).join(',') + '）' : ''));
+  const ECO_IDS = (FACETS.eco || []).map(f => f.id);
+  const SCENE_IDS = (FACETS.scene || []).map(f => f.id);
+  const badCat = LB.find(l => !l.name || !l.site || !l.summary || !l.scenario || !l.designLanguage ||
+    !Array.isArray(l.tags) || !l.tags.length || !Array.isArray(l.ecosystems) || !l.ecosystems.length ||
+    !l.cats || !Array.isArray(l.cats.eco) || !l.cats.eco.length || l.cats.eco.some(x => !ECO_IDS.includes(x)) ||
+    !Array.isArray(l.cats.scene) || !l.cats.scene.length || l.cats.scene.some(x => !SCENE_IDS.includes(x)) ||
+    !['free', 'freemium'].includes(l.pricing));
+  assert(!badCat, '库名称/官网/简介/场景/设计语言/筛选桶/收费字段齐全合法' + (badCat ? '（' + badCat.id + '）' : ''));
+  assert(FACETS.tags && FACETS.tags.length > 0, '标签维度已从数据自动聚合');
+
+  assert(FILTER({ eco: ['headless'] }).length === 4, '筛选生态=无头 → 4 个无头库');
+  assert(FILTER({ eco: ['vue'] }).every(l => l.cats.eco.includes('vue')), '筛选生态=Vue 全部含 Vue');
+  assert(FILTER({ scene: ['data'], pricing: ['free'] }).map(l => l.id).join(',') === 'ant-design', '组合筛选 数据密集 × 免费 → 仅 Ant Design');
+  assert(FILTER({ eco: ['react'], scene: ['infra'] }).length === 4, '组合筛选 React × 基础设施 → 4 个');
+  assert(FILTER({ tags: ['大厂出品'] }).length === 3, '筛选标签=大厂出品 → 3 个');
+  assert(FILTER({}).length === 19, '空筛选条件 → 全量 19 个');
+
+  const lIdx = W.STD_VIEWS.libs();
+  assert(lIdx.html.includes('UI 库图鉴'), '库列表页可渲染');
+  assert((lIdx.html.match(/class="lib-card"/g) || []).length === 19, '库列表页渲染 19 张卡片');
+  assert(lIdx.html.includes('data-lib-grid') && lIdx.html.includes('lib-filter'), '库列表页含筛选面板与结果容器');
+  const shadcn = W.STD_VIEWS.lib('shadcn-ui');
+  assert(shadcn && shadcn.html.includes('stl-kit'), 'shadcn 详情页含风格小样');
+  assert(shadcn.html.includes('#/styles/minimalism'), 'shadcn 详情含风格详解互链');
+  assert(shadcn.html.includes('data-copy'), '库详情页 AI 句式带复制按钮');
+  assert(shadcn.html.includes('target="_blank"') && shadcn.html.includes('rel="noopener"'), '库详情官网外链新窗打开');
+  const heroui = W.STD_VIEWS.lib('heroui');
+  assert(heroui && heroui.html.includes('NextUI'), 'HeroUI 详情注明曾用名 NextUI');
+  assert(W.STD_VIEWS.lib('nope') === null, '未知库安全返回空');
+
+  const lHit = W.STD_SEARCH.searchLibs('腾讯');
+  assert(lHit.length >= 1 && lHit[0].lib.id === 'tdesign', '库搜索「腾讯」命中 TDesign');
+  assert(W.STD_SEARCH.searchLibs('无头').some(r => r.lib.id === 'radix-ui'), '库搜索「无头」命中 Radix UI');
+  assert(W.STD_SEARCH.searchLibs('NextUI').some(r => r.lib.id === 'heroui'), '库搜索曾用名 NextUI 命中 HeroUI');
+
+  W.location.hash = '#/libs';
+  assert(W.STD_ROUTER.parseHash().name === 'libIndex', '库列表路由解析正确');
+  W.location.hash = '#/libs/shadcn-ui';
+  const lr = W.STD_ROUTER.parseHash();
+  assert(lr.name === 'libDetail' && lr.id === 'shadcn-ui', '库详情路由解析正确');
+} catch (e) {
+  failures++;
+  console.log('  FAIL - 库图鉴检查异常: ' + e.message);
+}
+
 /* ---------- 应用启动链路（加载 main 并真实执行 boot） ---------- */
 console.log('  --- 启动链路 ---');
 try {
@@ -218,6 +276,7 @@ try {
   assert(sb.includes('我的收藏'), '侧栏含「我的收藏」入口');
   assert(sb.includes('前端元素图鉴'), '侧栏含「前端元素图鉴」入口');
   assert(sb.includes('UI 风格图鉴'), '侧栏含「UI 风格图鉴」入口');
+  assert(sb.includes('UI 库图鉴'), '侧栏含「UI 库图鉴」入口');
   assert(!sb.includes('可视化图鉴'), '旧名「可视化图鉴」已全部改名');
   assert(sb.includes('分类导航'), '侧栏分类导航正常渲染');
   assert(sb.includes('编程基础'), '侧栏含第一个分类');
@@ -241,6 +300,14 @@ try {
   W.STD_ROUTER.refresh();
   assert((els.view._html || '').includes('stl-kit'), '风格详情页直链渲染+挂载正常');
 
+  // 库图鉴直链（列表 / 详情 mount：筛选面板与复制按钮绑定路径）
+  W.location.hash = '#/libs';
+  W.STD_ROUTER.refresh();
+  assert((els.view._html || '').includes('lib-card'), '库列表页直链渲染正常');
+  W.location.hash = '#/libs/shadcn-ui';
+  W.STD_ROUTER.refresh();
+  assert((els.view._html || '').includes('stl-kit'), '库详情页直链渲染+挂载正常');
+
   // 搜索页图鉴与风格分区
   W.location.hash = '#/s/' + encodeURIComponent('走马灯');
   W.STD_ROUTER.refresh();
@@ -248,12 +315,16 @@ try {
   W.location.hash = '#/s/' + encodeURIComponent('毛玻璃');
   W.STD_ROUTER.refresh();
   assert((els.view._html || '').includes('UI 风格图鉴'), '搜索页展示风格命中分区');
+  W.location.hash = '#/s/' + encodeURIComponent('腾讯');
+  W.STD_ROUTER.refresh();
+  assert((els.view._html || '').includes('UI 库图鉴'), '搜索页展示库命中分区');
 
   // 首页恢复
   W.location.hash = '';
   W.STD_ROUTER.refresh();
   assert((els.view._html || '').includes('分类浏览'), '首页视图恢复正常');
   assert((els.view._html || '').includes('图鉴速查'), '首页含图鉴速查入口');
+  assert((els.view._html || '').includes('UI 库图鉴'), '首页含库图鉴入口');
 } catch (e) {
   failures++;
   console.log('  FAIL - 启动链路异常: ' + e.message);
