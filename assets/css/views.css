@@ -294,6 +294,13 @@
   color: var(--muted);
 }
 .footer-meta { margin-top: var(--s1); font-size: var(--fs-xs); opacity: 0.8; }
+/* 访问计数：数字略强调、等宽数字防跳动 */
+.footer-meta.site-stats { margin-top: var(--s2); }
+.footer-meta.site-stats b {
+  font-weight: 600;
+  color: var(--accent-strong);
+  font-variant-numeric: tabular-nums;
+}
 /* 页脚外链：等距排列、图标对齐 */
 .footer-meta.footer-links {
   display: inline-flex;

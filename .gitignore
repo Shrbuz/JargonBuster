@@ -20,3 +20,6 @@ article/
 # 反馈服务本地配置与数据（含 SMTP 授权码，勿入库）
 deploy/feedback/feedback_config.json
 deploy/feedback/feedback_data/
+
+# Python 编译产物
+__pycache__/

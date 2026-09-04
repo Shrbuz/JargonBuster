@@ -6,6 +6,8 @@ feedback_server.py · 标准术语「反馈收集服务」（零第三方依赖�
 路由：
   POST /feedback/            接收前端反馈（JSON：page/title/desc/contact/shot）
   GET  /feedback/files/<name> 查看历史截图（兼容旧数据，新反馈不再存盘）
+  GET  /feedback/stats       读取访问计数（total / today，只读）
+  POST /feedback/stats/ping  记一次访问（会话去重由前端负责，服务端限频兜底）
 
 行为：
   1. 截图 base64 解码后直接内嵌到邮件（CID inline），不写磁盘
@@ -24,6 +26,7 @@ import re
 import ssl
 import smtplib
 import sys
+import threading
 import time
 import uuid
 from email.mime.multipart import MIMEMultipart
@@ -47,6 +50,7 @@ DEFAULT_CONFIG = {
     "max_shot": 3 * 1024 * 1024,    # 单张截图 base64 上限（字节）—— 内嵌邮件不宜过大
     "per_ip_limit": 5,              # 单 IP 时间窗内最多提交次数
     "per_ip_window": 3600,          # 限频时间窗（秒）
+    "stats_init_total": 2459,       # 访问计数初始值（stats.json 不存在时播种）
 }
 
 
@@ -77,6 +81,62 @@ def throttled(ip):
     hits.append(now)
     _IP_HITS[ip] = hits
     return False
+
+
+# ---------------- 访问计数（自托管，存储 storage_dir/stats.json） ----------------
+
+STATS_LOCK = threading.Lock()
+STATS_FILE = os.path.join(CFG['storage_dir'], 'stats.json')
+_PING_HITS = {}
+
+
+def _today():
+    return time.strftime('%Y-%m-%d')
+
+
+def load_stats():
+    """读取计数；文件不存在则按初始值播种；跨天自动归零今日值。"""
+    data = {'total': int(CFG['stats_init_total']), 'date': _today(), 'today': 0}
+    try:
+        with open(STATS_FILE, 'r', encoding='utf-8') as f:
+            data.update(json.load(f))
+    except Exception:
+        pass
+    if data.get('date') != _today():
+        data['date'] = _today()
+        data['today'] = 0
+    return data
+
+
+def save_stats(data):
+    tmp = STATS_FILE + '.tmp'
+    with open(tmp, 'w', encoding='utf-8') as f:
+        json.dump(data, f, ensure_ascii=False)
+    os.replace(tmp, STATS_FILE)
+
+
+def stats_snapshot(ping=False):
+    """返回当前计数快照；ping=True 时总访问与今日访问各 +1（带锁，防并发丢计数）。"""
+    with STATS_LOCK:
+        data = load_stats()
+        if ping:
+            data['total'] = int(data.get('total', CFG['stats_init_total'])) + 1
+            data['today'] = int(data.get('today', 0)) + 1
+            save_stats(data)
+        return {
+            'ok': True,
+            'total': int(data.get('total', CFG['stats_init_total'])),
+            'today': int(data.get('today', 0)),
+            'date': data.get('date', _today()),
+        }
+
+
+def ping_throttled(ip):
+    """ping 独立限频：10 秒窗口内超过 2 次只读不自增（防脚本刷数，正常访客无感）。"""
+    now = time.time()
+    hits = [t for t in _PING_HITS.get(ip, []) if now - t < 10]
+    _PING_HITS[ip] = hits + [now]
+    return len(hits) >= 2
 
 
 def build_html(page, title, desc, contact, has_shot):
@@ -186,14 +246,20 @@ class Handler(BaseHTTPRequestHandler):
         if u.path.startswith('/feedback/files/'):
             self._serve_file(u.path[len('/feedback/files/'):])
             return
+        if u.path.rstrip('/') == '/feedback/stats':
+            return self._send_json(200, stats_snapshot(ping=False))
         self._send_json(404, {'ok': False, 'error': 'not found'})
 
     def do_POST(self):
+        u = urlparse(self.path)
+        if u.path.rstrip('/') == '/feedback/stats/ping':
+            ip = self.client_address[0]
+            return self._send_json(200, stats_snapshot(ping=not ping_throttled(ip)))
+
         ip = self.client_address[0]
         if throttled(ip):
             return self._send_json(429, {'ok': False, 'error': '提交太频繁，请稍后再试'})
 
-        u = urlparse(self.path)
         if u.path.rstrip('/') != '/feedback':
             return self._send_json(404, {'ok': False, 'error': 'not found'})
 
@@ -256,9 +322,14 @@ class Handler(BaseHTTPRequestHandler):
 
 def main():
     port = int(sys.argv[1]) if len(sys.argv) > 1 else 8899
+    try:
+        sys.stdout.reconfigure(errors='replace')  # 控制台编码打不出字符时降级，不让日志崩掉服务
+    except Exception:
+        pass
     srv = ThreadingHTTPServer(('127.0.0.1', port), Handler)
     print('feedback server → http://127.0.0.1:%d/feedback/' % port)
     print('storage     → %s (仅 records.jsonl，截图内联邮件不落盘)' % CFG['storage_dir'])
+    print('stats       → %s (初始总访问 %s)' % (STATS_FILE, CFG['stats_init_total']))
     print('smtp        → %s:%s to=%s' % (CFG['smtp_host'], CFG['smtp_port'], CFG['to'] or '(未配置)'))
     try:
         srv.serve_forever()

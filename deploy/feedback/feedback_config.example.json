@@ -6,5 +6,6 @@
   "auth_code": "你的SMTP授权码（QQ邮箱设置里开启SMTP后生成，不是登录密码）",
   "to": "收件邮箱，填你自己接收反馈的邮箱",
   "storage_dir": "feedback_data",
-  "base_url": "本地测试用 http://127.0.0.1:8899 ；部署到服务器后改为 https://st.ewri.site"
+  "base_url": "本地测试用 http://127.0.0.1:8899 ；部署到服务器后改为 https://st.ewri.site",
+  "stats_init_total": 2459
 }

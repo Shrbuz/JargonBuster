@@ -80,7 +80,7 @@ function load(rel) {
   .concat(['assets/js/data/visual-elements.js', 'assets/js/visual-demos.js',
            'assets/js/data/ui-styles.js', 'assets/js/ui-style-demos.js', 'assets/js/data/ui-libs.js',
            'assets/js/visuals.js', 'assets/js/anims.js', 'assets/js/data.js', 'assets/js/search.js',
-           'assets/js/components.js', 'assets/js/views.js', 'assets/js/router.js'])
+           'assets/js/components.js', 'assets/js/views.js', 'assets/js/router.js', 'assets/js/stats.js'])
   .forEach(load);
 
 let failures = 0;
@@ -276,6 +276,12 @@ try {
   failures++;
   console.log('  FAIL - 库图鉴检查异常: ' + e.message);
 }
+
+/* ---------- 访问统计 ---------- */
+console.log('  --- 访问统计 ---');
+assert(W.STD_STATS && typeof W.STD_STATS.fmt === 'function', '访问计数模块已挂载');
+assert(W.STD_STATS.fmt(2459) === '2,459', '计数千分位格式化正常');
+assert(W.STD_STATS.fmt(0) === '0' && W.STD_STATS.fmt(undefined) === '0', '计数空值安全返回 0');
 
 /* ---------- 应用启动链路（加载 main 并真实执行 boot） ---------- */
 console.log('  --- 启动链路 ---');
